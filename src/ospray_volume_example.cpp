@@ -31,6 +31,9 @@ void writePPM(const char *fileName, const vec2i &size, const uint32_t *pixel) {
 }
 
 int main(int argc, const char **argv){
+
+
+
 	vec3i volumeDims(256, 256, 256);
 	for (int i = 1; i < argc; ++i){
 		if (std::strcmp(argv[i], "-s") == 0) {
@@ -76,8 +79,6 @@ int main(int argc, const char **argv){
 	ospSetString(volume, "voxelType", "uchar");
 	ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
 	ospSetObject(volume, "transferFunction", transferFcn);
-	// This will copy the volume data into OSPRay's volume where it'll re-organize
-	// it for better memory access
 	ospSetRegion(volume, volumeData.data(), osp::vec3i{0, 0, 0}, (osp::vec3i&)volumeDims);
 	ospCommit(volume);
 
@@ -93,7 +94,9 @@ int main(int argc, const char **argv){
 	OSPFrameBuffer framebuffer = ospNewFrameBuffer((osp::vec2i&)imageSize, OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
 	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
 
-	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+	for (int i = 0; i < 50; ++i) {
+	    ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+	}
 
 	const uint32_t * fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
 	writePPM("volume.ppm", imageSize, fb);
