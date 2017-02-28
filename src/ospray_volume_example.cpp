@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <vector>
 #ifdef _WIN32
+#  define NOMINMAX
 #  include <malloc.h>
 #else
 #  include <alloca.h>
@@ -57,7 +59,7 @@ int main(int argc, const char **argv){
 	const std::vector<vec3f> colors = {
 		vec3f(0, 0, 0.563),vec3f(0, 0, 1),vec3f(0, 1, 1),vec3f(0.5, 1, 0.5),vec3f(1, 1, 0),vec3f(1, 0, 0),vec3f(0.5, 0, 0)
 	};
-	const std::vector<float> opacities = {0.01, 0.05, 0.01};
+	const std::vector<float> opacities = {0.01f, 0.05f, 0.01f};
 	OSPData colorsData = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
 	ospCommit(colorsData);
 	OSPData opacityData = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
