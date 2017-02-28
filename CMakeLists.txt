@@ -20,6 +20,7 @@ endif()
 find_package(ospray REQUIRED)
 
 # include sources
+set(CMAKE_CXX_FLAGS "-std=c++11")
 include_directories(${OSPRAY_INCLUDE_DIRS})
 add_executable(osp_tiny_loader src/ospray_volume_example.cpp)
 target_link_libraries(osp_tiny_loader ${OSPRAY_LIBRARIES})
