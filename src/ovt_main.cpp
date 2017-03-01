@@ -5,8 +5,8 @@
 
 unsigned int WINX = 0, WINY = 0;
 const vec2i imageSize(1024, 1024);
-uint32_t* fb;
-otv::Quad quad;
+uint32_t*          fb_osp;
+cyGLRenderBuffer2D fb_gl;
 otv::Trackball controlball;
 
 /**
@@ -39,8 +39,10 @@ void GetNormalKeys(unsigned char key, GLint x, GLint y) {
 
 void render()
 {
-	quad.Bind(imageSize.x, imageSize.y, fb);
-	quad.Draw();
+	fb_gl.BindTexture();
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imageSize.x, imageSize.y, GL_RGBA, GL_UNSIGNED_BYTE, fb_osp);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb_gl.GetID());
+	glBlitFramebuffer(0, 0, imageSize.x, imageSize.y, 0, 0, imageSize.x, imageSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	glutSwapBuffers();
 }
 
@@ -107,8 +109,8 @@ int main(int argc, const char **argv)
 
 	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 
-	fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-	otv::helper::writePPM("volume.ppm", imageSize, fb);
+	fb_osp = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+	otv::helper::writePPM("volume.ppm", imageSize, fb_osp);
 
 	// check argument number
 	if (argc < 2) {
@@ -128,7 +130,7 @@ int main(int argc, const char **argv)
 			std::cerr << "Error: Cannot Initialize GLEW " << glewGetErrorString(err) << std::endl;
 			return EXIT_FAILURE;
 		}
-		quad.Init();
+		fb_gl.Initialize(true, 4, imageSize.x, imageSize.y);
 	}
 
 	// execute the program
@@ -145,7 +147,7 @@ int main(int argc, const char **argv)
 	}
 	
 	// exit
-	ospUnmapFrameBuffer(fb, framebuffer);
+	ospUnmapFrameBuffer(fb_osp, framebuffer);
 	return EXIT_SUCCESS;
 
 }
