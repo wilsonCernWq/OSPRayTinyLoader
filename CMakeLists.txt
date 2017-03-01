@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 project(OSPRayTinyLoader)
-
+#
 # include host specification file
 cmake_host_system_information(RESULT SYSNAME QUERY HOSTNAME)
 message(STATUS "trying to include ${SYSNAME}.cmake configuration file")
-include(config-site/${SYSNAME}.cmake OPTIONAL RESULT_VARIABLE CONFIGFOUND)
+include(cmake/config-site/${SYSNAME}.cmake OPTIONAL RESULT_VARIABLE CONFIGFOUND)
 if (NOT CONFIGFOUND)
   message(STATUS "failed to load the configuration file")
   message(STATUS "helper message:
@@ -15,12 +15,23 @@ if (NOT CONFIGFOUND)
     *) path to the root directory of your standalone ISPC executable as '-DISPC_EXECUTABLE=<..>'
   ")
 endif()
-
+#
 # load required libraries
+include(cmake/common.cmake)
 find_package(ospray REQUIRED)
-
+#
+# install dlls or shader
+file(GLOB_RECURSE SHADERS "src/*.glsl")
+set(COPYLIST ${COMMON_DLLS} ${SHADERS})
+if(EXECUTABLE_OUTPUT_PATH)
+  DeployRepo(${COPYLIST} ${EXECUTABLE_OUTPUT_PATH})
+else()
+  DeployRepo("${COPYLIST}" "${CMAKE_BINARY_DIR}")
+endif()
+#
 # include sources
-set(CMAKE_CXX_FLAGS "-std=c++11")
+file(GLOB_RECURSE CXX "src/*.cpp")
+file(GLOB_RECURSE HXX "src/*.h")
 include_directories(${OSPRAY_INCLUDE_DIRS})
-add_executable(osp_tiny_loader src/ospray_volume_example.cpp)
-target_link_libraries(osp_tiny_loader ${OSPRAY_LIBRARIES})
+add_executable(osp_tiny_loader ${CXX} ${HXX} ${SHADERS})
+target_link_libraries(osp_tiny_loader ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
