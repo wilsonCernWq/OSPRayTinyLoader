@@ -3,6 +3,8 @@
 #include "otv_helper.h"
 #include "otv_trackball.h"
 
+using namespace ospcommon;
+
 unsigned int WINX = 0, WINY = 0;
 const vec2i WINSIZE(1024, 1024);
 
