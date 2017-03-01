@@ -7,13 +7,13 @@ SET(LodePNG_INCLUDE_DIR ${LodePNG_ROOT_PATH})
 #
 # libraries
 FIND_LIBRARY(LodePNG_release_LIBRARIES NAMES lodepng PATHS
-${PROJECT_SOURCE_DIR}/external/LodePNG/lib/Release${WIN_ARCH})
+  ${LodePNG_ROOT_PATH}/lib/Release${WIN_ARCH})
 FIND_LIBRARY(LodePNG_util_release_LIBRARIES NAMES lodepng_util PATHS
-  ${PROJECT_SOURCE_DIR}/external/LodePNG/lib/Release${WIN_ARCH})
+  ${LodePNG_ROOT_PATH}/lib/Release${WIN_ARCH})
 FIND_LIBRARY(LodePNG_debug_LIBRARIES NAMES lodepng PATHS
-  ${PROJECT_SOURCE_DIR}/external/LodePNG/lib/Debug${WIN_ARCH})
+  ${LodePNG_ROOT_PATH}/lib/Debug${WIN_ARCH})
 FIND_LIBRARY(LodePNG_util_debug_LIBRARIES NAMES lodepng_util PATHS
-  ${PROJECT_SOURCE_DIR}/external/LodePNG/lib/Debug${WIN_ARCH})
+  ${LodePNG_ROOT_PATH}/lib/Debug${WIN_ARCH})
 #
 # process results
 MARK_AS_ADVANCED(
@@ -34,3 +34,4 @@ find_package_handle_standard_args(LodePNG
   DEFAULT_MSG
   LodePNG_INCLUDE_DIR
   LodePNG_LIBRARIES)
+
