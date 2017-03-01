@@ -98,7 +98,8 @@ namespace otv {
 		}
 
 		//! @name writePPM Helper function to write the rendered image as PPM file
-		void writePPM(const char *fileName, const vec2i &size, const uint32_t *pixel) {
+		void writePPM(const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel) {
+			using namespace ospcommon;
 			FILE *file = fopen(fileName, "wb");
 			fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
 			unsigned char *out = (unsigned char *)alloca(3 * size.x);

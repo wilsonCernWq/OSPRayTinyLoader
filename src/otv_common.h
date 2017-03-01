@@ -60,7 +60,6 @@
 //
 #include "ospray/ospray.h"
 #include "ospray/ospcommon/vec.h"
-using namespace ospcommon;
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
