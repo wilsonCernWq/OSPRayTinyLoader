@@ -8,6 +8,12 @@
 #define NOMINMAX
 
 //
+// include ospray
+//
+#include "ospray/ospray.h"
+#include "ospray/ospcommon/vec.h"
+
+//
 // include cpp standard library
 //
 #include <iostream>
@@ -54,12 +60,6 @@
 // include LodePNG / NanoJPG
 //
 #include "lodepng.h"
-
-//
-// include ospray
-//
-#include "ospray/ospray.h"
-#include "ospray/ospcommon/vec.h"
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
