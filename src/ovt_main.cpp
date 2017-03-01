@@ -1,13 +1,33 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "otv_common.h"
 #include "otv_helper.h"
-#include "quad.h"
+#include "otv_trackball.h"
 
 unsigned int WINX = 0, WINY = 0;
-const vec2i imageSize(1024, 1024);
+const vec2i WINSIZE(1024, 1024);
+
 uint32_t*          fb_osp;
 cyGLRenderBuffer2D fb_gl;
+
+vec3i volumeDims(256, 256, 256);
+vec3f camPos(-248, -62, 60);
+vec3f camDir = vec3f(volumeDims) / 2.f - camPos;
+vec3f camUp(0, 0, 1);
 otv::Trackball controlball;
+
+OSPCamera camera;
+OSPRenderer renderer;
+OSPFrameBuffer framebuffer;
+
+void UpdateCamera() 
+{
+	auto currCamDir = cyPoint3f(controlball.Matrix() * cyPoint4f((cyPoint3f)camDir, 0.0f));
+	auto currCamPos = (cyPoint3f)(vec3f(volumeDims) / 2.f) - currCamDir;
+	ospSetVec3f(camera, "pos", (osp::vec3f&)currCamPos);
+	ospSetVec3f(camera, "dir", (osp::vec3f&)currCamDir);
+	ospCommit(camera);
+	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+}
 
 /**
 * @brief GetMouseButton: Mouse button handling function
@@ -18,7 +38,7 @@ otv::Trackball controlball;
 */
 void GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
 	static cy::Point2f p;
-	otv::helper::mouse2screen(x, y, imageSize.x, imageSize.y, p);
+	otv::helper::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
 	controlball.BeginDrag(p[0], p[1]);
 }
 
@@ -29,46 +49,37 @@ void GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
 */
 void GetMousePosition(GLint x, GLint y) {
 	static cy::Point2f p;
-	otv::helper::mouse2screen(x, y, imageSize.x, imageSize.y, p);
+	otv::helper::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
 	controlball.Drag(p[0], p[1]);
+	UpdateCamera();
 }
 
 void GetNormalKeys(unsigned char key, GLint x, GLint y) {
 	if (key == 27) { glutLeaveMainLoop(); }
 }
 
+void Idle() { glutPostRedisplay(); }
+
 void render()
 {
+	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 	fb_gl.BindTexture();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imageSize.x, imageSize.y, GL_RGBA, GL_UNSIGNED_BYTE, fb_osp);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WINSIZE.x, WINSIZE.y, GL_RGBA, GL_UNSIGNED_BYTE, fb_osp);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb_gl.GetID());
-	glBlitFramebuffer(0, 0, imageSize.x, imageSize.y, 0, 0, imageSize.x, imageSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBlitFramebuffer(0, 0, WINSIZE.x, WINSIZE.y, 0, 0, WINSIZE.x, WINSIZE.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	glutSwapBuffers();
 }
 
 int main(int argc, const char **argv)
 {
-	vec3i volumeDims(256, 256, 256);
-	for (int i = 1; i < argc; ++i) {
-		if (std::strcmp(argv[i], "-s") == 0) {
-			volumeDims.x = std::atoi(argv[++i]);
-			volumeDims.y = std::atoi(argv[++i]);
-			volumeDims.z = std::atoi(argv[++i]);
-			std::cout << "Got volume dims from cmd line: " << volumeDims << "\n";
-		}
-	}
-
-	const vec3f camPos(-248, -62, 60);
-	const vec3f camDir = vec3f(volumeDims) / 2.f - camPos;
-	const vec3f camUp(0, 0, 1);
 
 	ospInit(&argc, argv);
 
-	OSPCamera camera = ospNewCamera("perspective");
-	ospSetf(camera, "aspect", imageSize.x / static_cast<float>(imageSize.y));
+	camera = ospNewCamera("perspective");
+	ospSetf(camera, "aspect", WINSIZE.x / static_cast<float>(WINSIZE.y));
 	ospSetVec3f(camera, "pos", (osp::vec3f&)camPos);
 	ospSetVec3f(camera, "dir", (osp::vec3f&)camDir);
-	ospSetVec3f(camera, "up", (osp::vec3f&)camUp);
+	ospSetVec3f(camera, "up",  (osp::vec3f&)camUp);
 	ospCommit(camera);
 
 	OSPTransferFunction transferFcn = ospNewTransferFunction("piecewise_linear");
@@ -99,23 +110,19 @@ int main(int argc, const char **argv)
 	ospAddVolume(world, volume);
 	ospCommit(world);
 
-	OSPRenderer renderer = ospNewRenderer("scivis");
+	renderer = ospNewRenderer("scivis");
 	ospSetObject(renderer, "model", world);
 	ospSetObject(renderer, "camera", camera);
 	ospCommit(renderer);
 
-	OSPFrameBuffer framebuffer = ospNewFrameBuffer((osp::vec2i&)imageSize, OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
+	framebuffer = ospNewFrameBuffer((osp::vec2i&)WINSIZE, OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
 	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-
 	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-
 	fb_osp = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-	otv::helper::writePPM("volume.ppm", imageSize, fb_osp);
 
 	// check argument number
 	if (argc < 2) {
 		std::cerr << "The program needs at lease one input argument!" << std::endl;
-		// return EXIT_FAILURE;
 	}
 
 	// initialize everything
@@ -123,14 +130,14 @@ int main(int argc, const char **argv)
 		glutInit(&argc, const_cast<char**>(argv));
 		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 		glutInitWindowPosition(WINX, WINY);
-		glutInitWindowSize(imageSize.x, imageSize.y);
+		glutInitWindowSize(WINSIZE.x, WINSIZE.y);
 		glutCreateWindow(argv[0]);
 		GLenum err = glewInit();
 		if (GLEW_OK != err) {
 			std::cerr << "Error: Cannot Initialize GLEW " << glewGetErrorString(err) << std::endl;
 			return EXIT_FAILURE;
 		}
-		fb_gl.Initialize(true, 4, imageSize.x, imageSize.y);
+		fb_gl.Initialize(true, 4, WINSIZE.x, WINSIZE.y);
 	}
 
 	// execute the program
@@ -138,7 +145,7 @@ int main(int argc, const char **argv)
 		glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 		glDisable(GL_DEPTH_TEST);
 		glutDisplayFunc(render);
-		glutIdleFunc(NULL);
+		glutIdleFunc(Idle);
 		glutMouseFunc(GetMouseButton);
 		glutMotionFunc(GetMousePosition);
 		glutKeyboardFunc(GetNormalKeys);
