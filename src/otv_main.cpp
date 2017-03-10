@@ -106,6 +106,7 @@ int main(int argc, const char **argv)
 	ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
 	ospSetObject(volume, "transferFunction", transferFcn);
 	ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, (osp::vec3i&)volumeDims);
+	ospSet1i(volume, "singleShade", 0);
 	ospCommit(volume);
 
 	OSPModel world = ospNewModel();
