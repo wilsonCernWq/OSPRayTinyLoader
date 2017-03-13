@@ -13,43 +13,21 @@ namespace otv {
 	//
 	class Trackball {
 	private:
-		float radius = 1.0f;
-		float rate = 200.0f;
-		GLboolean trackball_mode = true;
+		float     radius = 1.0f;
 		GLboolean inverse_mode = false;
-		Trackball *coord = nullptr;
 		cy::Matrix4f matrix = cy::Matrix4f::MatrixIdentity();
 		cy::Matrix4f matrix_prev = cy::Matrix4f::MatrixIdentity();
 		cy::Point3f  position;
 		cy::Point3f  position_prev;
-		cy::Matrix4f view;
-		cy::Matrix4f view_prev;
 		float position_surf[2];
 	public:
+
 		/** constractors */
 		Trackball() {}
-		Trackball(bool i, bool n, Trackball* worldcoord = nullptr) :
-			inverse_mode(i),
-			trackball_mode(n),
-			coord(worldcoord)
-		{}
+		Trackball(bool i) : inverse_mode(i) {}
 
 		void SetRadius(const float r) { radius = r; }
-		void SetRate(const float r) { rate = r; }
 		void SetInverseMode(bool r) { inverse_mode = r; }
-
-		/**
-		* @brief ChangeMode: to switch between FPS mode and Trackball mode
-		*/
-		void ChangeMode() {
-			trackball_mode = !trackball_mode;
-			if (trackball_mode) {
-				std::cout << " -- Trackball Mode --" << std::endl;
-			}
-			else {
-				std::cout << " -- FPS Camera Mode --" << std::endl;
-			}
-		}
 
 		/**
 		* @brief BeginDrag/Zoom: initialize drag/zoom
@@ -72,31 +50,20 @@ namespace otv {
 		void Drag(float x, float y)
 		{
 			cy::Matrix4f rot;
-			if (trackball_mode) {
-				// get direction
-				position = proj2surf(x, y);
-				cy::Point3f dir = (position_prev.Cross(position)).GetNormalized();
-				// modify 
-				dir = inverse_mode ? -dir : dir;
-				dir = coord == nullptr ? dir : coord->Matrix().GetSubMatrix3().GetInverse() * dir;
-				// compute rotation angle
-				float product = position_prev.Dot(position);
-				float angle = product / position_prev.Length() / position.Length();
-				if (angle > 0.99999999999) { // to prevent position_prev == position, this will cause invalid value
-					return;
-				}
-				else { // compute rotation
-					rot.SetRotation(dir, acos(angle));
-				}
+			// get direction
+			position = proj2surf(x, y);
+			cy::Point3f dir = (position_prev.Cross(position)).GetNormalized();
+			dir = inverse_mode ? -dir : dir;
+			// compute rotation angle
+			float angle = position_prev.Dot(position) / position_prev.Length() / position.Length();
+			if (angle > 0.99999999999) { // to prevent position_prev == position, this will cause invalid value
+				return;
 			}
-			else {
-				float alphaX = +180 * (x - position_prev[0]) / 200.0f;
-				float alphaY = -180 * (y - position_prev[1]) / 200.0f;
-				rot = cy::Matrix4f::MatrixRotationX(alphaY) * cy::Matrix4f::MatrixRotationY(alphaX);
+			else { // compute rotation
+				rot.SetRotation(dir, acos(angle));
 			}
 			matrix = rot * matrix_prev;
 		}
-
 
 		/**
 		 * @brief matrix: trackball matrix accessor

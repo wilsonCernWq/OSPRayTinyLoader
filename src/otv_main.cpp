@@ -2,57 +2,56 @@
 #include "otv_common.h"
 #include "otv_helper.h"
 #include "otv_trackball.h"
+#include "otv_meshwrapper.h"
 
 using namespace ospcommon;
 
 unsigned int WINX = 0, WINY = 0;
 const vec2i WINSIZE(1024, 1024);
 
+//! texture maps
 uint32_t*          fb_osp;
 cyGLRenderBuffer2D fb_gl;
 
-vec3i volumeDims(256, 256, 256);
-vec3f camPos(-248, -62, 60);
-vec3f camDir = vec3f(volumeDims) / 2.f - camPos;
-vec3f camUp(0, 0, 1);
-otv::Trackball controlball;
-
+//! OSPRay objects
+OSPModel world;
 OSPCamera camera;
 OSPRenderer renderer;
 OSPFrameBuffer framebuffer;
 
-void UpdateCamera() 
+//! camera objects
+vec3f camPos(0, -10, 10);
+vec3f camDir = vec3f(0,0,0) - camPos;
+vec3f camUp(0, 1, 0);
+otv::Trackball camRotate(true);
+
+//! mesh
+otv::Mesh mesh;
+
+void UpdateCamera(bool cleanbuffer = true) 
 {
-	auto currCamDir = cyPoint3f(controlball.Matrix() * cyPoint4f((cyPoint3f)camDir, 0.0f));
-	auto currCamPos = (cyPoint3f)(vec3f(volumeDims) / 2.f) - currCamDir;
+	auto currCamUp  = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camUp,  0.0f));
+	auto currCamDir = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camDir, 0.0f));
+	auto currCamPos = (cyPoint3f)(vec3f(0, 0, 0)) - currCamDir;
 	ospSetVec3f(camera, "pos", (osp::vec3f&)currCamPos);
 	ospSetVec3f(camera, "dir", (osp::vec3f&)currCamDir);
+	ospSetVec3f(camera, "up",  (osp::vec3f&)currCamUp);
 	ospCommit(camera);
-	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+	if (cleanbuffer) {
+		ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+	}
 }
 
-/**
-* @brief GetMouseButton: Mouse button handling function
-* @param button (GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON)
-* @param state  (GLUT_UP or GLUT_DOWN)
-* @param x
-* @param y
-*/
 void GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
 	static cy::Point2f p;
 	otv::helper::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
-	controlball.BeginDrag(p[0], p[1]);
+	camRotate.BeginDrag(p[0], p[1]);
 }
 
-/**
-* @brief GetMousePosition: Mouse position callbacl handling function
-* @param x
-* @param y
-*/
 void GetMousePosition(GLint x, GLint y) {
 	static cy::Point2f p;
 	otv::helper::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
-	controlball.Drag(p[0], p[1]);
+	camRotate.Drag(p[0], p[1]);
 	UpdateCamera();
 }
 
@@ -75,45 +74,80 @@ void render()
 int main(int argc, const char **argv)
 {
 
+	mesh.LoadFromFileObj(argv[1]);
+
 	ospInit(&argc, argv);
 
 	camera = ospNewCamera("perspective");
 	ospSetf(camera, "aspect", WINSIZE.x / static_cast<float>(WINSIZE.y));
-	ospSetVec3f(camera, "pos", (osp::vec3f&)camPos);
-	ospSetVec3f(camera, "dir", (osp::vec3f&)camDir);
-	ospSetVec3f(camera, "up",  (osp::vec3f&)camUp);
-	ospCommit(camera);
+	UpdateCamera(false);
 
-	OSPTransferFunction transferFcn = ospNewTransferFunction("piecewise_linear");
-	const std::vector<vec3f> colors = {
-		vec3f(0, 0, 0.563),vec3f(0, 0, 1),vec3f(0, 1, 1),vec3f(0.5, 1, 0.5),vec3f(1, 1, 0),vec3f(1, 0, 0),vec3f(0.5, 0, 0)
-	};
-	const std::vector<float> opacities = { 0.01f, 0.05f, 0.01f };
-	OSPData colorsData = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
-	ospCommit(colorsData);
-	OSPData opacityData = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
-	ospCommit(opacityData);
-	const vec2f valueRange(static_cast<float>(0), static_cast<float>(255));
-	ospSetData(transferFcn, "colors", colorsData);
-	ospSetData(transferFcn, "opacities", opacityData);
-	ospSetVec2f(transferFcn, "valueRange", (osp::vec2f&)valueRange);
-	ospCommit(transferFcn);
+	world = ospNewModel();
+	renderer = ospNewRenderer("raytracer");
 
-	std::vector<unsigned char> volumeData(volumeDims.x * volumeDims.y * volumeDims.z, 0);
-	for (size_t i = 0; i < volumeData.size(); ++i) { volumeData[i] = i % 255; }
-	OSPVolume volume = ospNewVolume("block_bricked_volume");
-	ospSetString(volume, "voxelType", "uchar");
-	ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
-	ospSetObject(volume, "transferFunction", transferFcn);
-	ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, (osp::vec3i&)volumeDims);
-	ospSet1i(volume, "singleShade", 0);
-	ospCommit(volume);
+	int i = 0;
+	for (int i = 0; i < mesh.geometries.size(); ++i) {
+		if (mesh.geometries[i].num_faces != 0) {
+			OSPGeometry geometry_data = ospNewGeometry("triangles");
+			//! vertex
+			OSPData vertex_data = ospNewData(mesh.geometries[i].vertex.size() / 3, OSP_FLOAT3, mesh.geometries[i].vertex.data(), OSP_DATA_SHARED_BUFFER);
+			ospCommit(vertex_data);
+			ospSetObject(geometry_data, "vertex", vertex_data);
+			//! index
+			OSPData index_data = ospNewData(mesh.geometries[i].index.size() / 3, OSP_INT3, mesh.geometries[i].index.data(), OSP_DATA_SHARED_BUFFER);
+			ospCommit(index_data);
+			ospSetObject(geometry_data, "index", index_data);
+			//! normal
+			if (mesh.geometries[i].has_normal) {
+				OSPData normal_data = ospNewData(mesh.geometries[i].normal.size() / 3, OSP_FLOAT3, mesh.geometries[i].normal.data(), OSP_DATA_SHARED_BUFFER);
+				ospCommit(normal_data);
+				ospSetObject(geometry_data, "vertex.normal", normal_data);
+			}
+			//! texture coordinate
+			if (mesh.geometries[i].has_texcoord) {
+				OSPData texcoord_data = ospNewData(mesh.geometries[i].texcoord.size() / 2, OSP_FLOAT2, mesh.geometries[i].texcoord.data(), OSP_DATA_SHARED_BUFFER);
+				ospCommit(texcoord_data);
+				ospSetObject(geometry_data, "vertex.texcoord", texcoord_data);
+			}
+			//! material
+			OSPMaterial ospmtl = ospNewMaterial(renderer, "OBJMaterial");
 
-	OSPModel world = ospNewModel();
-	ospAddVolume(world, volume);
+
+			ospCommit(geometry_data);
+			ospAddGeometry(world, geometry_data);
+		}
+	}
 	ospCommit(world);
 
-	renderer = ospNewRenderer("scivis");
+	//OSPTransferFunction transferFcn = ospNewTransferFunction("piecewise_linear");
+	//const std::vector<vec3f> colors = {
+	//	vec3f(0, 0, 0.563),vec3f(0, 0, 1),vec3f(0, 1, 1),vec3f(0.5, 1, 0.5),vec3f(1, 1, 0),vec3f(1, 0, 0),vec3f(0.5, 0, 0)
+	//};
+	//const std::vector<float> opacities = { 0.01f, 0.05f, 0.01f };
+	//OSPData colorsData = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
+	//ospCommit(colorsData);
+	//OSPData opacityData = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
+	//ospCommit(opacityData);
+	//const vec2f valueRange(static_cast<float>(0), static_cast<float>(255));
+	//ospSetData(transferFcn, "colors", colorsData);
+	//ospSetData(transferFcn, "opacities", opacityData);
+	//ospSetVec2f(transferFcn, "valueRange", (osp::vec2f&)valueRange);
+	//ospCommit(transferFcn);
+
+	//std::vector<unsigned char> volumeData(volumeDims.x * volumeDims.y * volumeDims.z, 0);
+	//for (size_t i = 0; i < volumeData.size(); ++i) { volumeData[i] = i % 256; }
+	//OSPVolume volume = ospNewVolume("block_bricked_volume");
+	//ospSetString(volume, "voxelType", "uchar");
+	//ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
+	//ospSetObject(volume, "transferFunction", transferFcn);
+	//ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, (osp::vec3i&)volumeDims);
+	//ospSet1i(volume, "singleShade", 0);
+	//ospCommit(volume);
+
+	//OSPModel world = ospNewModel();
+	//ospAddVolume(world, volume);
+	//ospCommit(world);
+
 	ospSetObject(renderer, "model", world);
 	ospSetObject(renderer, "camera", camera);
 	ospCommit(renderer);
