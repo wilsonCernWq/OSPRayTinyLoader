@@ -64,6 +64,16 @@ void GetNormalKeys(unsigned char key, GLint x, GLint y) {
 
 void Idle() { glutPostRedisplay(); }
 
+void clean()
+{
+	fb_gl.Delete();
+	ospUnmapFrameBuffer(fb_osp, framebuffer);
+	ospRelease(world);
+	ospRelease(camera);
+	ospRelease(renderer);
+	ospRelease(framebuffer);
+}
+
 void render()
 {
 	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
@@ -76,108 +86,185 @@ void render()
 
 int main(int argc, const char **argv)
 {
-	// check argument number
+	//! check argument number
 	if (argc < 2) {
 		std::cerr << "The program needs at lease one input argument!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	ospInit(&argc, argv);
 
-	mesh.LoadFromFileObj(argv[1]);
-	
-	camFocus = (vec3f&)(0.5 * (mesh.GetBBoxMax() + mesh.GetBBoxMin()));
-	camPos *= (mesh.GetBBoxMax() - mesh.GetBBoxMin()).Length() / 10.0f;
+	//! create world and renderer
+	world = ospNewModel();
+	renderer = ospNewRenderer("scivis"); // possible options: "pathtracer" "raytracer"
 
+	////! geometry/volume
+	//mesh.LoadFromFileObj(argv[1]);
+	//camFocus = (vec3f&)(0.5 * (mesh.GetBBoxMax() + mesh.GetBBoxMin()));
+	//camPos *= (mesh.GetBBoxMax() - mesh.GetBBoxMin()).Length() / 10.0f;
+	//for (int i = 0; i < mesh.geometries.size(); ++i) {
+	//	if (mesh.geometries[i].num_faces != 0) {
+	//		OSPGeometry geometry_data = ospNewGeometry("triangles");
+	//		//! vertex
+	//		OSPData vertex_data = ospNewData(mesh.geometries[i].vertex.size() / 3, OSP_FLOAT3, mesh.geometries[i].vertex.data(), OSP_DATA_SHARED_BUFFER);
+	//		ospCommit(vertex_data);
+	//		ospSetObject(geometry_data, "vertex", vertex_data);
+	//		//! index
+	//		OSPData index_data = ospNewData(mesh.geometries[i].index.size() / 3, OSP_INT3, mesh.geometries[i].index.data(), OSP_DATA_SHARED_BUFFER);
+	//		ospCommit(index_data);
+	//		ospSetObject(geometry_data, "index", index_data);
+	//		//! normal
+	//		if (mesh.geometries[i].has_normal) {
+	//			OSPData normal_data = ospNewData(mesh.geometries[i].normal.size() / 3, OSP_FLOAT3, mesh.geometries[i].normal.data(), OSP_DATA_SHARED_BUFFER);
+	//			ospCommit(normal_data);
+	//			ospSetObject(geometry_data, "vertex.normal", normal_data);
+	//		}
+	//		//! texture coordinate
+	//		if (mesh.geometries[i].has_texcoord) {
+	//			OSPData texcoord_data = ospNewData(mesh.geometries[i].texcoord.size() / 2, OSP_FLOAT2, mesh.geometries[i].texcoord.data(), OSP_DATA_SHARED_BUFFER);
+	//			ospCommit(texcoord_data);
+	//			ospSetObject(geometry_data, "vertex.texcoord", texcoord_data);
+	//		}
+	//		//! material
+	//		OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
+	//		ospSetVec3f(mtl_data, "Tf", (osp::vec3f&)mesh.GetMaterial(i, "Tf"));
+	//		ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mesh.GetMaterial(i, "Kd"));
+	//		ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mesh.GetMaterial(i, "Ks"));
+	//		ospSet1f(mtl_data, "Ns", mesh.tiny.materials[i].shininess);
+	//		ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
+	//		if (!mesh.textures[i].map_Kd.IsEmpty()) {
+	//			OSPTexture2D map_Kd = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Kd.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Kd.data.data(), 1);
+	//			ospSetObject(mtl_data, "map_Kd", map_Kd);
+	//		}
+	//		if (!mesh.textures[i].map_Ks.IsEmpty()) {
+	//			OSPTexture2D map_Ks = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Ks.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ks.data.data(), 1);
+	//			ospSetObject(mtl_data, "map_Ks", map_Ks);
+	//		}
+	//		if (!mesh.textures[i].map_Ns.IsEmpty()) {
+	//			OSPTexture2D map_Ns = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Ns.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ns.data.data(), 1);
+	//			ospSetObject(mtl_data, "map_Ns", map_Ns);
+	//		}
+	//		if (!mesh.textures[i].map_d.IsEmpty()) {
+	//			OSPTexture2D map_d = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_d.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_d.data.data(), 1);
+	//			ospSetObject(mtl_data, "map_d", map_d);
+	//		}
+	//		if (!mesh.textures[i].map_Bump.IsEmpty()) {
+	//			OSPTexture2D map_Bump = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Bump.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Bump.data.data(), 1);
+	//			ospSetObject(mtl_data, "map_Bump", map_Bump);
+	//		}
+	//		ospCommit(mtl_data);
+	//		ospSetMaterial(geometry_data, mtl_data);
+	//		//! commit geometry
+	//		ospCommit(geometry_data);
+	//		ospAddGeometry(world, geometry_data);
+	//	}
+	//}
+	//ospCommit(world);
+
+	OSPTransferFunction transferFcn = ospNewTransferFunction("piecewise_linear");
+	const std::vector<vec3f> colors = {
+		vec3f(0, 0, 0.563),vec3f(0, 0, 1),vec3f(0, 1, 1),vec3f(0.5, 1, 0.5),vec3f(1, 1, 0),vec3f(1, 0, 0),vec3f(0.5, 0, 0)
+	};
+	const std::vector<float> opacities = { 0.05f, 0.05f, 0.05f };
+	// const std::vector<float> opacities = { 1.0f, 1.0f, 1.0f };
+	OSPData colorsData = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
+	ospCommit(colorsData);
+	OSPData opacityData = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
+	ospCommit(opacityData);
+	const vec2f valueRange(static_cast<float>(0), static_cast<float>(255));
+	ospSetData(transferFcn, "colors", colorsData);
+	ospSetData(transferFcn, "opacities", opacityData);
+	ospSetVec2f(transferFcn, "valueRange", (osp::vec2f&)valueRange);
+	ospCommit(transferFcn);
+
+	// now I am going to create two volumes and see if there are boundary defects
+	//int volumeScale = 256;
+	//std::vector<unsigned char> volumeData(volumeScale * volumeScale * volumeScale, 0);
+	//for (size_t i = 0; i < volumeData.size(); ++i) { volumeData[i] = i % volumeScale; }
+	//// volume #1
+	//{
+	//	vec3i volumeDims(256);
+	//	vec3f volumeStart(-2.0f, -4.0f, -2.0f);
+	//	vec3f volumeStop(2.0f, 0.0f, 2.0f);
+	//	vec3f volumeSpac = (volumeStop - volumeStart) / (vec3f)(volumeDims - 1);
+	//	OSPVolume volume = ospNewVolume("block_bricked_volume");
+	//	ospSetString(volume, "voxelType", "uchar");
+	//	ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
+	//	ospSetVec3f(volume, "gridOrigin", (osp::vec3f&)volumeStart);
+	//	ospSetVec3f(volume, "gridSpacing", (osp::vec3f&)volumeSpac);
+	//	ospSet1i(volume, "singleShade", 0);
+	//	ospSetObject(volume, "transferFunction", transferFcn);
+	//	ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, (osp::vec3i&)volumeDims);
+	//	ospCommit(volume);
+	//	ospAddVolume(world, volume);
+	//}
+	//// volume #2
+	//{
+	//	vec3i volumeDims(256);
+	//	vec3f volumeStart(-2.0f, 0.0f, -2.0f);
+	//	vec3f volumeStop(2.0f, 4.0f, 2.0f);
+	//	vec3f volumeSpac = (volumeStop - volumeStart) / (vec3f)(volumeDims - 1);
+	//	OSPVolume volume = ospNewVolume("block_bricked_volume");
+	//	ospSetString(volume, "voxelType", "uchar");
+	//	ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
+	//	ospSetVec3f(volume, "gridOrigin", (osp::vec3f&)volumeStart);
+	//	ospSetVec3f(volume, "gridSpacing", (osp::vec3f&)volumeSpac);
+	//	ospSet1i(volume, "singleShade", 0);
+	//	ospSetObject(volume, "transferFunction", transferFcn);
+	//	ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, (osp::vec3i&)volumeDims);
+	//	ospCommit(volume);
+	//	ospAddVolume(world, volume);
+	//}
+	// volume #3
+	std::vector<unsigned char> volumeData(256 * 512 * 256, 0);
+	for (size_t i = 0; i < volumeData.size(); ++i) { volumeData[i] = i % 256; }
+	{
+		vec3i volumeDims(256, 512, 256);
+		vec3f volumeStart(-2.0f, -4.0f, -2.0f);
+		vec3f volumeStop(2.0f, 4.0f, 2.0f);
+		vec3f volumeSpac = (volumeStop - volumeStart) / (vec3f)(volumeDims - 1);
+		OSPVolume volume = ospNewVolume("block_bricked_volume");
+		ospSetString(volume, "voxelType", "uchar");
+		ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
+		ospSetVec3f(volume, "gridOrigin", (osp::vec3f&)volumeStart);
+		ospSetVec3f(volume, "gridSpacing", (osp::vec3f&)volumeSpac);
+		ospSet1i(volume, "singleShade", 0);
+		ospSetObject(volume, "transferFunction", transferFcn);
+		ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, osp::vec3i{ 256, 256, 256 });
+		ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 256, 0 }, osp::vec3i{ 256, 512, 256 });
+		ospCommit(volume);
+		ospAddVolume(world, volume);
+	}
+
+	ospCommit(world);
+
+	//! camera
 	camera = ospNewCamera("perspective");
 	ospSetf(camera, "aspect", static_cast<float>(WINSIZE.x) / static_cast<float>(WINSIZE.y));
 	UpdateCamera(false);
 
-	world = ospNewModel();
-	// renderer = ospNewRenderer("pathtracer");
-	renderer = ospNewRenderer("scivis");
-
-	int i = 0;
-	for (int i = 0; i < mesh.geometries.size(); ++i) {
-		if (mesh.geometries[i].num_faces != 0) {
-			OSPGeometry geometry_data = ospNewGeometry("triangles");
-			//! vertex
-			OSPData vertex_data = ospNewData(mesh.geometries[i].vertex.size() / 3, OSP_FLOAT3, mesh.geometries[i].vertex.data(), OSP_DATA_SHARED_BUFFER);
-			ospCommit(vertex_data);
-			ospSetObject(geometry_data, "vertex", vertex_data);
-			//! index
-			OSPData index_data = ospNewData(mesh.geometries[i].index.size() / 3, OSP_INT3, mesh.geometries[i].index.data(), OSP_DATA_SHARED_BUFFER);
-			ospCommit(index_data);
-			ospSetObject(geometry_data, "index", index_data);
-			//! normal
-			if (mesh.geometries[i].has_normal) {
-				OSPData normal_data = ospNewData(mesh.geometries[i].normal.size() / 3, OSP_FLOAT3, mesh.geometries[i].normal.data(), OSP_DATA_SHARED_BUFFER);
-				ospCommit(normal_data);
-				ospSetObject(geometry_data, "vertex.normal", normal_data);
-			}
-			//! texture coordinate
-			if (mesh.geometries[i].has_texcoord) {
-				OSPData texcoord_data = ospNewData(mesh.geometries[i].texcoord.size() / 2, OSP_FLOAT2, mesh.geometries[i].texcoord.data(), OSP_DATA_SHARED_BUFFER);
-				ospCommit(texcoord_data);
-				ospSetObject(geometry_data, "vertex.texcoord", texcoord_data);
-			}
-			//! material
-			OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
-			ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mesh.GetMaterial(i, "Kd"));
-			ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mesh.GetMaterial(i, "Ks"));
-			ospSetVec3f(mtl_data, "Tf", (osp::vec3f&)mesh.GetMaterial(i, "Tf"));
-			ospSet1f(mtl_data, "Ns", mesh.tiny.materials[i].shininess);
-			ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
-			if (!mesh.textures[i].map_Kd.IsEmpty()) {
-				OSPTexture2D map_Kd = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Kd.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Kd.data.data(), 1);
-				ospSetObject(mtl_data, "map_Kd", map_Kd);
-			}
-			if (!mesh.textures[i].map_Ks.IsEmpty()) {
-				OSPTexture2D map_Ks = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Ks.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ks.data.data(), 1);
-				ospSetObject(mtl_data, "map_Ks", map_Ks);
-			}
-			if (!mesh.textures[i].map_Ns.IsEmpty()) {
-				OSPTexture2D map_Ns = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Ns.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ns.data.data(), 1);
-				ospSetObject(mtl_data, "map_Ns", map_Ns);
-			}
-			if (!mesh.textures[i].map_d.IsEmpty()) {
-				OSPTexture2D map_d = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_d.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_d.data.data(), 1);
-				ospSetObject(mtl_data, "map_d", map_d);
-			}
-			if (!mesh.textures[i].map_Bump.IsEmpty()) {
-				OSPTexture2D map_Bump = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Bump.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Bump.data.data(), 1);
-				ospSetObject(mtl_data, "map_Bump", map_Bump);
-			}
-			ospCommit(mtl_data);
-			ospSetMaterial(geometry_data, mtl_data);
-			//! commit geometry
-			ospCommit(geometry_data);
-			ospAddGeometry(world, geometry_data);
-		}
-	}
-	ospCommit(world);
-
+	//! lighting
 	OSPLight ambient_light = ospNewLight(renderer, "AmbientLight");
 	ospCommit(ambient_light);
-
 	OSPLight directional_light = ospNewLight(renderer, "DirectionalLight");
 	ospSetVec3f(directional_light, "direction", osp::vec3f{ 0.0f, 11.0f, 0.0f});
 	ospCommit(directional_light);
-
 	std::vector<OSPLight> light_list { ambient_light, directional_light };
 	OSPData lights = ospNewData(light_list.size(), OSP_OBJECT, light_list.data());
 	ospCommit(lights);
 
+	//! renderer
 	ospSetData(renderer, "lights", lights);
 	ospSetObject(renderer, "model", world);
 	ospSetObject(renderer, "camera", camera);
 	ospCommit(renderer);
 
+	//! render to buffer
 	framebuffer = ospNewFrameBuffer((osp::vec2i&)WINSIZE, OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
 	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
 	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 	fb_osp = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
 
-	// initialize everything
+	//! initialize openGL
 	{
 		glutInit(&argc, const_cast<char**>(argv));
 		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -206,8 +293,7 @@ int main(int argc, const char **argv)
 	}
 
 	// exit
-	ospUnmapFrameBuffer(fb_osp, framebuffer);
+	clean();
 	return EXIT_SUCCESS;
-
 }
 
