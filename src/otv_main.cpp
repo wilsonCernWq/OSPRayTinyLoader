@@ -124,6 +124,7 @@ int main(int argc, const char **argv)
 			OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
 			ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mesh.GetMaterial(i, "Kd"));
 			ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mesh.GetMaterial(i, "Ks"));
+			ospSetVec3f(mtl_data, "Tf", (osp::vec3f&)mesh.GetMaterial(i, "Tf"));
 			ospSet1f(mtl_data, "Ns", mesh.tiny.materials[i].shininess);
 			ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
 			if (!mesh.textures[i].map_Kd.IsEmpty()) {

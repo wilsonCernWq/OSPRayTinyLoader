@@ -67,6 +67,9 @@ namespace otv {
 			else if (str.compare("Ks") == 0) {
 				return cyPoint3f(tiny.materials[i].specular);
 			}
+			else if (str.compare("Tf") == 0) {
+				return cyPoint3f(tiny.materials[i].transmittance);
+			}
 		}
 		/** 
 		 * Overriding LoadFromFileObj function for TriMesh, force to triangulate
