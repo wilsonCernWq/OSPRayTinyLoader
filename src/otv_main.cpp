@@ -165,7 +165,6 @@ int main(int argc, const char **argv)
 		vec3f(0, 0, 0.563),vec3f(0, 0, 1),vec3f(0, 1, 1),vec3f(0.5, 1, 0.5),vec3f(1, 1, 0),vec3f(1, 0, 0),vec3f(0.5, 0, 0)
 	};
 	const std::vector<float> opacities = { 0.05f, 0.05f, 0.05f };
-	// const std::vector<float> opacities = { 1.0f, 1.0f, 1.0f };
 	OSPData colorsData = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
 	ospCommit(colorsData);
 	OSPData opacityData = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
@@ -227,6 +226,8 @@ int main(int argc, const char **argv)
 		ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
 		ospSetVec3f(volume, "gridOrigin", (osp::vec3f&)volumeStart);
 		ospSetVec3f(volume, "gridSpacing", (osp::vec3f&)volumeSpac);
+		//ospSetVec3f(volume, "volumeClippingBoxLower", osp::vec3f{0.0f, 0.0f, 0.0f});
+		//ospSetVec3f(volume, "volumeClippingBoxUpper", osp::vec3f{10.0f, 2.0f, 2.0f});
 		ospSet1i(volume, "singleShade", 0);
 		ospSetObject(volume, "transferFunction", transferFcn);
 		ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, osp::vec3i{ 256, 256, 256 });
