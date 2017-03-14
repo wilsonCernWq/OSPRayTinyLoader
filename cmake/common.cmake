@@ -83,6 +83,10 @@ ENDIF()
 #   https://github.com/cemyuksel/cyCodeBase.git
 INCLUDE_DIRECTORIES(library ${PROJECT_SOURCE_DIR}/external/cyCodeBase)
 #
+#--- add CImg
+#   https://github.com/dtschump/CImg
+INCLUDE_DIRECTORIES(library ${PROJECT_SOURCE_DIR}/external/CImg/CImg-2.0.0)
+#
 #--- lodePNG
 #   http://lodev.org/lodepng/
 SET(LodePNG_ROOT_PATH "${PROJECT_SOURCE_DIR}/external/lodepng")

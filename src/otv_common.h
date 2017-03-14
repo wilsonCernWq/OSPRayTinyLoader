@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <limits>
 
 #include <GL/glew.h>
 #ifdef APPLE // apple specific header
@@ -57,7 +58,7 @@
 #include "tiny_obj_loader.h"
 
 //
-// include LodePNG / NanoJPG
+// include image loader
 //
 #include "lodepng.h"
 

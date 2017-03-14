@@ -41,7 +41,9 @@ namespace otv {
 	
 	struct ImageData {
 		std::vector<unsigned char> data;
-		unsigned int width, height;
+		unsigned int width = 0, height = 0;
+		bool IsEmpty() { return (width * height <= 0); }
+		cy::Point2<int> Size() { return cy::Point2<int>(width, height); }
 	};
 
 	namespace helper {
@@ -77,23 +79,32 @@ namespace otv {
 		}
 
 		//! @name loadimg
+		void loadimgActual(ImageData& image, const char* filename, const std::string path) {
+			std::string fnamestr(path + std::string(filename));
+			std::size_t found = fnamestr.find_last_of('.');
+			if (found == std::string::npos) { std::cerr << "Error: unknown file format " << std::endl; return; }
+			// check image format
+			std::string ext = fnamestr.substr(found + 1);
+			if (ext == "png" || ext == "PNG") {
+				unsigned error = lodepng::decode(image.data, image.width, image.height, fnamestr.c_str());
+				if (error) { //if there's an error, display it
+					std::cout << "decoder error '" << fnamestr.c_str() << "' " << error << ": " << lodepng_error_text(error) << std::endl;
+				}
+			}
+			else {
+				std::cerr << "Error: unknown file format " << ext << std::endl;
+			}
+		}
+		inline void loadimg(ImageData& image, const std::string filename, const std::string path)
+		{
+			if (!filename.empty()) {
+				loadimgActual(image, filename.c_str(), path);
+			}
+		}
 		inline void loadimg(ImageData& image, const char* filename, const std::string path)
 		{
 			if (filename) {
-				std::string fnamestr(path + std::string(filename));
-				std::size_t found = fnamestr.find_last_of('.');
-				if (found == std::string::npos) { std::cerr << "Error: unknown file format " << std::endl; return; }
-				// check image format
-				std::string ext = fnamestr.substr(found + 1);
-				if (ext == "png" || ext == "PNG") {
-					unsigned error = lodepng::decode(image.data, image.width, image.height, fnamestr.c_str());
-					if (error) { //if there's an error, display it
-						std::cout << "decoder error '" << fnamestr.c_str() << "' " << error << ": " << lodepng_error_text(error) << std::endl;
-					}
-				}
-				else {
-					std::cerr << "Error: unknown file format " << ext << std::endl;
-				}
+				loadimgActual(image, filename, path);
 			}
 		}
 

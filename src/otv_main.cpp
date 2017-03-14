@@ -1,4 +1,5 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
+
 #include "otv_common.h"
 #include "otv_helper.h"
 #include "otv_trackball.h"
@@ -20,22 +21,24 @@ OSPRenderer renderer;
 OSPFrameBuffer framebuffer;
 
 //! camera objects
-vec3f camPos(0, -10, 10);
-vec3f camDir = vec3f(0,0,0) - camPos;
+vec3f camFocus = vec3f(0, 0, 0);
+vec3f camPos(0, 0, 10);
 vec3f camUp(0, 1, 0);
+vec3f camDir = camFocus - camPos;
 otv::Trackball camRotate(true);
 
 //! mesh
 otv::Mesh mesh;
 
-void UpdateCamera(bool cleanbuffer = true) 
+void UpdateCamera(bool cleanbuffer = true)
 {
-	auto currCamUp  = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camUp,  0.0f));
+	camDir = camFocus - camPos;
+	auto currCamUp = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camUp, 0.0f));
 	auto currCamDir = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camDir, 0.0f));
-	auto currCamPos = (cyPoint3f)(vec3f(0, 0, 0)) - currCamDir;
+	auto currCamPos = (cyPoint3f)camFocus - currCamDir;
 	ospSetVec3f(camera, "pos", (osp::vec3f&)currCamPos);
 	ospSetVec3f(camera, "dir", (osp::vec3f&)currCamDir);
-	ospSetVec3f(camera, "up",  (osp::vec3f&)currCamUp);
+	ospSetVec3f(camera, "up", (osp::vec3f&)currCamUp);
 	ospCommit(camera);
 	if (cleanbuffer) {
 		ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
@@ -73,17 +76,25 @@ void render()
 
 int main(int argc, const char **argv)
 {
-
-	mesh.LoadFromFileObj(argv[1]);
-
+	// check argument number
+	if (argc < 2) {
+		std::cerr << "The program needs at lease one input argument!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	ospInit(&argc, argv);
 
+	mesh.LoadFromFileObj(argv[1]);
+	
+	camFocus = (vec3f&)(0.5 * (mesh.GetBBoxMax() + mesh.GetBBoxMin()));
+	camPos *= (mesh.GetBBoxMax() - mesh.GetBBoxMin()).Length() / 10.0f;
+
 	camera = ospNewCamera("perspective");
-	ospSetf(camera, "aspect", WINSIZE.x / static_cast<float>(WINSIZE.y));
+	ospSetf(camera, "aspect", static_cast<float>(WINSIZE.x) / static_cast<float>(WINSIZE.y));
 	UpdateCamera(false);
 
 	world = ospNewModel();
-	renderer = ospNewRenderer("raytracer");
+	// renderer = ospNewRenderer("pathtracer");
+	renderer = ospNewRenderer("scivis");
 
 	int i = 0;
 	for (int i = 0; i < mesh.geometries.size(); ++i) {
@@ -110,44 +121,52 @@ int main(int argc, const char **argv)
 				ospSetObject(geometry_data, "vertex.texcoord", texcoord_data);
 			}
 			//! material
-			OSPMaterial ospmtl = ospNewMaterial(renderer, "OBJMaterial");
-
-
+			OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
+			ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mesh.GetMaterial(i, "Kd"));
+			ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mesh.GetMaterial(i, "Ks"));
+			ospSet1f(mtl_data, "Ns", mesh.tiny.materials[i].shininess);
+			ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
+			if (!mesh.textures[i].map_Kd.IsEmpty()) {
+				OSPTexture2D map_Kd = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Kd.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Kd.data.data(), 1);
+				ospSetObject(mtl_data, "map_Kd", map_Kd);
+			}
+			if (!mesh.textures[i].map_Ks.IsEmpty()) {
+				OSPTexture2D map_Ks = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Ks.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ks.data.data(), 1);
+				ospSetObject(mtl_data, "map_Ks", map_Ks);
+			}
+			if (!mesh.textures[i].map_Ns.IsEmpty()) {
+				OSPTexture2D map_Ns = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Ns.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ns.data.data(), 1);
+				ospSetObject(mtl_data, "map_Ns", map_Ns);
+			}
+			if (!mesh.textures[i].map_d.IsEmpty()) {
+				OSPTexture2D map_d = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_d.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_d.data.data(), 1);
+				ospSetObject(mtl_data, "map_d", map_d);
+			}
+			if (!mesh.textures[i].map_Bump.IsEmpty()) {
+				OSPTexture2D map_Bump = ospNewTexture2D((osp::vec2i&)(mesh.textures[i].map_Bump.Size()), OSP_TEXTURE_RGBA8, mesh.textures[i].map_Bump.data.data(), 1);
+				ospSetObject(mtl_data, "map_Bump", map_Bump);
+			}
+			ospCommit(mtl_data);
+			ospSetMaterial(geometry_data, mtl_data);
+			//! commit geometry
 			ospCommit(geometry_data);
 			ospAddGeometry(world, geometry_data);
 		}
 	}
 	ospCommit(world);
 
-	//OSPTransferFunction transferFcn = ospNewTransferFunction("piecewise_linear");
-	//const std::vector<vec3f> colors = {
-	//	vec3f(0, 0, 0.563),vec3f(0, 0, 1),vec3f(0, 1, 1),vec3f(0.5, 1, 0.5),vec3f(1, 1, 0),vec3f(1, 0, 0),vec3f(0.5, 0, 0)
-	//};
-	//const std::vector<float> opacities = { 0.01f, 0.05f, 0.01f };
-	//OSPData colorsData = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
-	//ospCommit(colorsData);
-	//OSPData opacityData = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
-	//ospCommit(opacityData);
-	//const vec2f valueRange(static_cast<float>(0), static_cast<float>(255));
-	//ospSetData(transferFcn, "colors", colorsData);
-	//ospSetData(transferFcn, "opacities", opacityData);
-	//ospSetVec2f(transferFcn, "valueRange", (osp::vec2f&)valueRange);
-	//ospCommit(transferFcn);
+	OSPLight ambient_light = ospNewLight(renderer, "AmbientLight");
+	ospCommit(ambient_light);
 
-	//std::vector<unsigned char> volumeData(volumeDims.x * volumeDims.y * volumeDims.z, 0);
-	//for (size_t i = 0; i < volumeData.size(); ++i) { volumeData[i] = i % 256; }
-	//OSPVolume volume = ospNewVolume("block_bricked_volume");
-	//ospSetString(volume, "voxelType", "uchar");
-	//ospSetVec3i(volume, "dimensions", (osp::vec3i&)volumeDims);
-	//ospSetObject(volume, "transferFunction", transferFcn);
-	//ospSetRegion(volume, volumeData.data(), osp::vec3i{ 0, 0, 0 }, (osp::vec3i&)volumeDims);
-	//ospSet1i(volume, "singleShade", 0);
-	//ospCommit(volume);
+	OSPLight directional_light = ospNewLight(renderer, "DirectionalLight");
+	ospSetVec3f(directional_light, "direction", osp::vec3f{ 0.0f, 11.0f, 0.0f});
+	ospCommit(directional_light);
 
-	//OSPModel world = ospNewModel();
-	//ospAddVolume(world, volume);
-	//ospCommit(world);
+	std::vector<OSPLight> light_list { ambient_light, directional_light };
+	OSPData lights = ospNewData(light_list.size(), OSP_OBJECT, light_list.data());
+	ospCommit(lights);
 
+	ospSetData(renderer, "lights", lights);
 	ospSetObject(renderer, "model", world);
 	ospSetObject(renderer, "camera", camera);
 	ospCommit(renderer);
@@ -156,11 +175,6 @@ int main(int argc, const char **argv)
 	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
 	ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 	fb_osp = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-
-	// check argument number
-	if (argc < 2) {
-		std::cerr << "The program needs at lease one input argument!" << std::endl;
-	}
 
 	// initialize everything
 	{
@@ -189,7 +203,7 @@ int main(int argc, const char **argv)
 		glutInitContextFlags(GLUT_DEBUG);
 		glutMainLoop();
 	}
-	
+
 	// exit
 	ospUnmapFrameBuffer(fb_osp, framebuffer);
 	return EXIT_SUCCESS;
