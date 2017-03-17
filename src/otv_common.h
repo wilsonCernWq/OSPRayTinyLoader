@@ -16,11 +16,11 @@
 //
 // include cpp standard library
 //
+#include <algorithm>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <limits>
 
 #include <GL/glew.h>
 #ifdef APPLE // apple specific header
@@ -48,7 +48,6 @@
 #include <cyCore.h>
 #include <cyTimer.h>
 #include <cyPoint.h>
-#include <cyTriMesh.h>
 #include <cyMatrix.h>
 #include <cyGL.h>
 
@@ -63,10 +62,10 @@
 #include "lodepng.h"
 
 #ifndef EXIT_SUCCESS
-#define EXIT_SUCCESS 0
+#	define EXIT_SUCCESS 0
 #endif
 #ifndef EXIT_FAILURE
-#define EXIT_FAILURE 1
+#	define EXIT_FAILURE 1
 #endif
 
 #endif//_OTV_COMMON_H_
