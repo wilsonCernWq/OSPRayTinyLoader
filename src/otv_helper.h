@@ -9,26 +9,26 @@
 
 //! @name error check helper from EPFL ICG class
 static inline const char* ErrorString(GLenum error) {
-	const char* msg;
-	switch (error) {
+    const char* msg;
+    switch (error) {
 #define Case(Token)  case Token: msg = #Token; break;
-		Case(GL_INVALID_ENUM);
-		Case(GL_INVALID_VALUE);
-		Case(GL_INVALID_OPERATION);
-		Case(GL_INVALID_FRAMEBUFFER_OPERATION);
-		Case(GL_NO_ERROR);
-		Case(GL_OUT_OF_MEMORY);
+	Case(GL_INVALID_ENUM);
+	Case(GL_INVALID_VALUE);
+	Case(GL_INVALID_OPERATION);
+	Case(GL_INVALID_FRAMEBUFFER_OPERATION);
+	Case(GL_NO_ERROR);
+	Case(GL_OUT_OF_MEMORY);
 #undef Case
-	}
-	return msg;
+    }
+    return msg;
 }
 
 //! @name check error
 static inline void _glCheckError(const char* file, int line, const char* comment) {
-	GLenum error;
-	while ((error = glGetError()) != GL_NO_ERROR) {
-		fprintf(stderr, "ERROR: %s (file %s, line %i: %s).\n", comment, file, line, ErrorString(error));
-	}
+    GLenum error;
+    while ((error = glGetError()) != GL_NO_ERROR) {
+	fprintf(stderr, "ERROR: %s (file %s, line %i: %s).\n", comment, file, line, ErrorString(error));
+    }
 }
 
 #ifndef NDEBUG
@@ -37,133 +37,164 @@ static inline void _glCheckError(const char* file, int line, const char* comment
 #	define check_error_gl() ((void)0)
 #endif
 
+#ifndef NDEBUG
+#define DEBUG_VECTOR(n, t)\  
+static void debug(const cy::Point##n##t& m) {   	     \
+    std::cout << std::endl;                                  \
+    for (int i = 0; i < n; ++i) {			     \
+        std::cout << "\t" << m[i];                           \
+    }                                                        \
+    std::cout << std::endl;				     \
+}
+#define DEBUG_MATRIX(n, t)\  
+static void debug(const cy::Matrix##n##t& m) {   	     \
+    std::cout << std::endl;                                  \
+    for (int i = 0; i < n; ++i) {			     \
+    for (int j = 0; j < n; ++j) {			     \
+        std::cout << "\t" << m(i, j);			     \
+    }                                                        \
+    std::cout << std::endl;				     \
+    }                                                        \
+    std::cout << std::endl;				     \
+}
+#else
+#define DEBUG_VECTOR (n, t) static void debug(const cy::Point##n##t& m) {}
+#define DEBUG_MATRIX (n, t) static void debug(const cy::Matrix##n##t& m) {}
+#endif                                                     
+
+namespace cy {
+    typedef Point2<int> Point2i;
+    typedef Point3<int> Point3i;
+    typedef Point4<int> Point4i;
+    typedef Matrix2<int> Matrix2i;
+    typedef Matrix3<int> Matrix3i;
+    typedef Matrix4<int> Matrix4i;
+
+};
+typedef cy::Point2<int> cyPoint2i;
+typedef cy::Point3<int> cyPoint3i;
+typedef cy::Point4<int> cyPoint4i;
+typedef cy::Matrix2<int> cyMatrix2i;
+typedef cy::Matrix3<int> cyMatrix3i;
+typedef cy::Matrix4<int> cyMatrix4i;
+
+DEBUG_VECTOR(2,f)
+DEBUG_VECTOR(3,f)
+DEBUG_VECTOR(4,f)
+DEBUG_VECTOR(2,i)
+DEBUG_VECTOR(3,i)
+DEBUG_VECTOR(4,i)
+
+DEBUG_MATRIX(2,f)
+DEBUG_MATRIX(3,f)
+DEBUG_MATRIX(4,f)
+DEBUG_MATRIX(2,i)
+DEBUG_MATRIX(3,i)
+DEBUG_MATRIX(4,i)
+
+#define CAST_VECTOR(n, t)\  
+static ospcommon::vec##n##t make_vec(const cy::Point##n##t& m) { \
+    ospcommon::vec##n##t v;					 \
+    for (int i = 0; i < n; ++i) {			         \
+        v[i] = m[i];                                             \
+    }                                                            \
+    return v;							 \
+}
+
+CAST_VECTOR(2,i)
+CAST_VECTOR(3,i)
+CAST_VECTOR(4,i)
+CAST_VECTOR(2,f)
+CAST_VECTOR(3,f)
+CAST_VECTOR(4,f)
+
 namespace otv {
 	
-	struct ImageData {
-		std::vector<unsigned char> data;
-		unsigned int width = 0, height = 0;
-		bool IsEmpty() { return (width * height <= 0); }
-		cy::Point2<int> Size() { return cy::Point2<int>(width, height); }
-	};
+    struct ImageData {
+	std::vector<unsigned char> data;
+	unsigned int width = 0, height = 0;
+	bool IsEmpty() { return (width * height <= 0); }
+	cy::Point2<int> Size() { return cy::Point2<int>(width, height); }
+    };
 
-	namespace helper {
+    //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
+    inline void mouse2screen(int x, int y, float width, float height, cy::Point2f& p)
+    {
+	p = cy::Point2f(2.0f * (float)x / width - 1.0f, 1.0f - 2.0f * (float)y / height);
+    }
 
-		//! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
-		inline void mouse2screen(int x, int y, float width, float height, cy::Point2f& p)
-		{
-			p = cy::Point2f(2.0f * (float)x / width - 1.0f, 1.0f - 2.0f * (float)y / height);
-		}
+    //! @name load file into string
+    inline std::string loadfile(const char *filename, std::ostream *outStream = &std::cout) {
+	std::ifstream stream(filename, std::ios::in);
+	if (!stream.is_open()) {
+	    if (outStream) *outStream << "ERROR: Cannot open file '" << filename << "'"<< std::endl;
+	    exit(EXIT_FAILURE);
+	}
+	std::string str = std::string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+	stream.close();
+	return str;
+    }
 
-		//! @name load file into string
-		inline std::string loadfile(const char *filename, std::ostream *outStream = &std::cout) {
-			std::ifstream stream(filename, std::ios::in);
-			if (!stream.is_open()) {
-				if (outStream) *outStream << "ERROR: Cannot open file '" << filename << "'"<< std::endl;
-				exit(EXIT_FAILURE);
-			}
-			std::string str = std::string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-			stream.close();
-			return str;
-		}
+    //! @name copychar: copy string data to char pointer
+    inline void copychar(char * &str, const std::string& src, int start = 0)
+    {
+	if (str) { delete[] str; }
+	if (src == "") { str = nullptr; }
+	else {
+	    size_t len = strlen(src.c_str());
+	    str = new char[len + 1]; str[len] = '\0';
+	    strncpy(str, src.c_str(), len);
+	}
+    }
 
-		//! @name copychar: copy string data to char pointer
-		inline void copychar(char * &str, const std::string& src, int start = 0)
-		{
-			if (str) { delete[] str; }
-			if (src == "") { str = nullptr; }
-			else {
-				size_t len = strlen(src.c_str());
-				str = new char[len + 1]; str[len] = '\0';
-				strncpy(str, src.c_str(), len);
-			}
-		}
+    //! @name loadimg
+    void loadimgActual(ImageData& image, const char* filename, const std::string path) {
+	std::string fnamestr(path + std::string(filename));
+	std::size_t found = fnamestr.find_last_of('.');
+	if (found == std::string::npos) { std::cerr << "Error: unknown file format " << std::endl; return; }
+	// check image format
+	std::string ext = fnamestr.substr(found + 1);
+	if (ext == "png" || ext == "PNG") {
+	    unsigned error = lodepng::decode(image.data, image.width, image.height, fnamestr.c_str());
+	    if (error) { //if there's an error, display it
+		std::cout << "decoder error '" << fnamestr.c_str() << "' " << error << ": " << lodepng_error_text(error) << std::endl;
+	    }
+	}
+	else {
+	    std::cerr << "Error: unknown file format " << ext << std::endl;
+	}
+    }
+    inline void loadimg(ImageData& image, const std::string filename, const std::string path)
+    {
+	if (!filename.empty()) {
+	    loadimgActual(image, filename.c_str(), path);
+	}
+    }
+    inline void loadimg(ImageData& image, const char* filename, const std::string path)
+    {
+	if (filename) {
+	    loadimgActual(image, filename, path);
+	}
+    }
 
-		//! @name loadimg
-		void loadimgActual(ImageData& image, const char* filename, const std::string path) {
-			std::string fnamestr(path + std::string(filename));
-			std::size_t found = fnamestr.find_last_of('.');
-			if (found == std::string::npos) { std::cerr << "Error: unknown file format " << std::endl; return; }
-			// check image format
-			std::string ext = fnamestr.substr(found + 1);
-			if (ext == "png" || ext == "PNG") {
-				unsigned error = lodepng::decode(image.data, image.width, image.height, fnamestr.c_str());
-				if (error) { //if there's an error, display it
-					std::cout << "decoder error '" << fnamestr.c_str() << "' " << error << ": " << lodepng_error_text(error) << std::endl;
-				}
-			}
-			else {
-				std::cerr << "Error: unknown file format " << ext << std::endl;
-			}
-		}
-		inline void loadimg(ImageData& image, const std::string filename, const std::string path)
-		{
-			if (!filename.empty()) {
-				loadimgActual(image, filename.c_str(), path);
-			}
-		}
-		inline void loadimg(ImageData& image, const char* filename, const std::string path)
-		{
-			if (filename) {
-				loadimgActual(image, filename, path);
-			}
-		}
-
-		//! @name writePPM Helper function to write the rendered image as PPM file
-		void writePPM(const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel) {
-			using namespace ospcommon;
-			FILE *file = fopen(fileName, "wb");
-			fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
-			unsigned char *out = (unsigned char *)alloca(3 * size.x);
-			for (int y = 0; y < size.y; y++) {
-				const unsigned char *in = (const unsigned char *)&pixel[(size.y - 1 - y)*size.x];
-				for (int x = 0; x < size.x; x++) {
-					out[3 * x + 0] = in[4 * x + 0];
-					out[3 * x + 1] = in[4 * x + 1];
-					out[3 * x + 2] = in[4 * x + 2];
-				}
-				fwrite(out, 3 * size.x, sizeof(char), file);
-			}
-			fprintf(file, "\n");
-			fclose(file);
-		}
-
-		//! @name debug functions
-		inline void debug(const cy::Matrix3f& m) {
-#ifndef NDEBUG
-			std::cout << std::endl;
-			std::cout << "\t" << m(0, 0) << "\t" << m(0, 1) << "\t" << m(0, 2) << std::endl;
-			std::cout << "\t" << m(1, 0) << "\t" << m(1, 1) << "\t" << m(1, 2) << std::endl;
-			std::cout << "\t" << m(2, 0) << "\t" << m(2, 1) << "\t" << m(2, 2) << std::endl;
-#endif
-		}
-		inline void debug(const cy::Matrix4f& m) {
-#ifndef NDEBUG
-			std::cout << std::endl;
-			std::cout << "\t" << m(0, 0) << "\t" << m(0, 1) << "\t" << m(0, 2) << "\t" << m(0, 3) << std::endl;
-			std::cout << "\t" << m(1, 0) << "\t" << m(1, 1) << "\t" << m(1, 2) << "\t" << m(1, 3) << std::endl;
-			std::cout << "\t" << m(2, 0) << "\t" << m(2, 1) << "\t" << m(2, 2) << "\t" << m(2, 3) << std::endl;
-			std::cout << "\t" << m(3, 0) << "\t" << m(3, 1) << "\t" << m(3, 2) << "\t" << m(3, 3) << std::endl;
-#endif
-		}
-		inline void debug(const cy::Point2f& m) {
-#ifndef NDEBUG
-			std::cout << std::endl;
-			std::cout << "\t" << m[0] << "\t" << m[1] << std::endl;
-#endif
-		}
-		inline void debug(const cy::Point3f& m) {
-#ifndef NDEBUG
-			std::cout << std::endl;
-			std::cout << "\t" << m[0] << "\t" << m[1] << "\t" << m[2] << std::endl;
-#endif
-		}
-		inline void debug(const cy::Point4f& m) {
-#ifndef NDEBUG
-			std::cout << std::endl;
-			std::cout << "\t" << m[0] << "\t" << m[1] << "\t" << m[2] << "\t" << m[3] << std::endl;
-#endif
-		}
-	};
+    //! @name writePPM Helper function to write the rendered image as PPM file
+    void writePPM(const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel) {
+	using namespace ospcommon;
+	FILE *file = fopen(fileName, "wb");
+	fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
+	unsigned char *out = (unsigned char *)alloca(3 * size.x);
+	for (int y = 0; y < size.y; y++) {
+	    const unsigned char *in = (const unsigned char *)&pixel[(size.y - 1 - y)*size.x];
+	    for (int x = 0; x < size.x; x++) {
+		out[3 * x + 0] = in[4 * x + 0];
+		out[3 * x + 1] = in[4 * x + 1];
+		out[3 * x + 2] = in[4 * x + 2];
+	    }
+	    fwrite(out, 3 * size.x, sizeof(char), file);
+	}
+	fprintf(file, "\n");
+	fclose(file);
+    }
 
 };
 
