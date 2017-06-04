@@ -19,6 +19,7 @@ endif()
 # load required libraries
 include(cmake/common.cmake)
 find_package(ospray REQUIRED)
+include_directories(${OSPRAY_INCLUDE_DIRS})
 #
 # install dlls or shader
 file(GLOB_RECURSE SHADERS "src/*.glsl")
@@ -30,8 +31,12 @@ else()
 endif()
 #
 # include sources
+file(GLOB_RECURSE MAIN "src/main.cpp")
 file(GLOB_RECURSE CXX "src/*.cpp")
 file(GLOB_RECURSE HXX "src/*.h")
-include_directories(${OSPRAY_INCLUDE_DIRS})
-add_executable(osp_tiny_loader ${CXX} ${HXX} ${SHADERS})
-target_link_libraries(osp_tiny_loader ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
+list(REMOVE_ITEM CXX ${MAIN})
+add_library(osphelper ${CXX} ${HXX} ${SHADERS})
+target_link_libraries(osphelper ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
+add_executable(osploader ${MAIN})
+target_link_libraries(osploader osphelper)
+

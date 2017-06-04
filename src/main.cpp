@@ -1,85 +1,19 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 
-#include "otv_common.h"
-#include "otv_helper.h"
-#include "otv_trackball.h"
-#include "otv_meshwrapper.h"
+#include "common.h"
+#include "helper.h"
+#include "trackball.h"
+#include "meshwrapper.h"
+#include "callbacks.h"
 
-using namespace ospcommon;
-
-unsigned int WINX = 0, WINY = 0;
-const vec2i WINSIZE(1024, 1024);
-
-// texture maps
-uint32_t*          fb_osp;
-cyGLRenderBuffer2D fb_gl;
-
-// OSPRay objects
-OSPModel world;
-OSPCamera camera;
-OSPRenderer renderer;
-OSPFrameBuffer framebuffer;
-
-// camera objects
-vec3f camFocus = vec3f(0, 0, 0);
-vec3f camPos(0, 0, 10);
-vec3f camUp(0, 1, 0);
-vec3f camDir = camFocus - camPos;
-otv::Trackball camRotate(true);
-
-// mesh
-otv::Mesh mesh;
-
-void UpdateCamera(bool cleanbuffer = true)
-{
-    camDir = camFocus - camPos;
-    auto currCamUp = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camUp, 0.0f));
-    auto currCamDir = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camDir, 0.0f));
-    auto currCamPos = (cyPoint3f)camFocus - currCamDir;
-    ospSetVec3f(camera, "pos", (osp::vec3f&)currCamPos);
-    ospSetVec3f(camera, "dir", (osp::vec3f&)currCamDir);
-    ospSetVec3f(camera, "up",  (osp::vec3f&)currCamUp);
-    ospCommit(camera);
-    if (cleanbuffer) {
-	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-    }
-}
-
-void GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
-    static cy::Point2f p;
-    otv::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
-    camRotate.BeginDrag(p[0], p[1]);
-}
-
-void GetMousePosition(GLint x, GLint y) {
-    static cy::Point2f p;
-    otv::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
-    camRotate.Drag(p[0], p[1]);
-    UpdateCamera();
-}
-
-void GetNormalKeys(unsigned char key, GLint x, GLint y) {
-    if (key == 27) { glutLeaveMainLoop(); }
-}
-
-void Idle() { glutPostRedisplay(); }
-
-void clean()
-{
-    fb_gl.Delete();
-    ospUnmapFrameBuffer(fb_osp, framebuffer);
-    ospRelease(world);
-    ospRelease(camera);
-    ospRelease(renderer);
-    ospRelease(framebuffer);
-}
+using namespace otv;
 
 void render()
 {
     ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-    fb_gl.BindTexture();
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WINSIZE.x, WINSIZE.y, GL_RGBA, GL_UNSIGNED_BYTE, fb_osp);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fb_gl.GetID());
+    gfb.BindTexture();
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WINSIZE.x, WINSIZE.y, GL_RGBA, GL_UNSIGNED_BYTE, ofb);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
     glBlitFramebuffer(0, 0, WINSIZE.x, WINSIZE.y, 0, 0, WINSIZE.x, WINSIZE.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glutSwapBuffers();
 }
@@ -99,7 +33,7 @@ int main(int argc, const char **argv)
 
     //! geometry/volume
     mesh.LoadFromFileObj(argv[1]);
-    camFocus = make_vec(0.5 * (mesh.GetBBoxMax() + mesh.GetBBoxMin()));
+    camFocus = otv::make_vec(0.5 * (mesh.GetBBoxMax() + mesh.GetBBoxMin()));
     camPos *= (mesh.GetBBoxMax() - mesh.GetBBoxMin()).Length() / 10.0f;
     for (int i = 0; i < mesh.geometries.size(); ++i) {
 	if (mesh.geometries[i].num_faces != 0) {
@@ -126,36 +60,36 @@ int main(int argc, const char **argv)
 	    }
 	    //! material
 	    OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
-	    ospcommon::vec3f mtl_Tf = make_vec(mesh.GetMaterial(i, "Tf"));
-	    ospcommon::vec3f mtl_Kd = make_vec(mesh.GetMaterial(i, "Kd"));
-	    ospcommon::vec3f mtl_Ks = make_vec(mesh.GetMaterial(i, "Ks"));			
+	    ospcommon::vec3f mtl_Tf = otv::make_vec(mesh.GetMaterial(i, "Tf"));
+	    ospcommon::vec3f mtl_Kd = otv::make_vec(mesh.GetMaterial(i, "Kd"));
+	    ospcommon::vec3f mtl_Ks = otv::make_vec(mesh.GetMaterial(i, "Ks"));			
 	    ospSetVec3f(mtl_data, "Tf", (osp::vec3f&)mtl_Tf);
 	    ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mtl_Kd);
 	    ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mtl_Ks);
 	    ospSet1f(mtl_data, "Ns", mesh.tiny.materials[i].shininess);
 	    ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
 	    if (!mesh.textures[i].map_Kd.IsEmpty()) {
-		auto tex_dim = make_vec(mesh.textures[i].map_Kd.Size());
+		auto tex_dim = otv::make_vec(mesh.textures[i].map_Kd.Size());
 		OSPTexture2D map_Kd = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Kd.data.data(), 1);
 		ospSetObject(mtl_data, "map_Kd", map_Kd);
 	    }
 	    if (!mesh.textures[i].map_Ks.IsEmpty()) {
-		auto tex_dim = make_vec(mesh.textures[i].map_Ks.Size());
+		auto tex_dim = otv::make_vec(mesh.textures[i].map_Ks.Size());
 		OSPTexture2D map_Ks = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ks.data.data(), 1);
 		ospSetObject(mtl_data, "map_Ks", map_Ks);
 	    }
 	    if (!mesh.textures[i].map_Ns.IsEmpty()) {
-		auto tex_dim = make_vec(mesh.textures[i].map_Ns.Size());
+		auto tex_dim = otv::make_vec(mesh.textures[i].map_Ns.Size());
 		OSPTexture2D map_Ns = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ns.data.data(), 1);
 		ospSetObject(mtl_data, "map_Ns", map_Ns);
 	    }
 	    if (!mesh.textures[i].map_d.IsEmpty()) {
-		auto tex_dim = make_vec(mesh.textures[i].map_d.Size());
+		auto tex_dim = otv::make_vec(mesh.textures[i].map_d.Size());
 		OSPTexture2D map_d = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_d.data.data(), 1);
 		ospSetObject(mtl_data, "map_d", map_d);
 	    }
 	    if (!mesh.textures[i].map_Bump.IsEmpty()) {
-		auto tex_dim = make_vec(mesh.textures[i].map_Bump.Size());
+		auto tex_dim = otv::make_vec(mesh.textures[i].map_Bump.Size());
 		OSPTexture2D map_Bump = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Bump.data.data(), 1);
 		ospSetObject(mtl_data, "map_Bump", map_Bump);
 	    }
@@ -193,7 +127,7 @@ int main(int argc, const char **argv)
     framebuffer = ospNewFrameBuffer((osp::vec2i&)WINSIZE, OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
     ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
     ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-    fb_osp = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+    ofb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
 
     //! initialize openGL
     {
@@ -207,7 +141,7 @@ int main(int argc, const char **argv)
 	    std::cerr << "Error: Cannot Initialize GLEW " << glewGetErrorString(err) << std::endl;
 	    return EXIT_FAILURE;
 	}
-	fb_gl.Initialize(true, 4, WINSIZE.x, WINSIZE.y);
+	gfb.Initialize(true, 4, WINSIZE.x, WINSIZE.y);
     }
 
     // execute the program
@@ -224,6 +158,6 @@ int main(int argc, const char **argv)
     }
 
     // exit
-    clean();
+    Clean();
     return EXIT_SUCCESS;
 }

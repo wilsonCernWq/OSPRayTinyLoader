@@ -1,9 +1,9 @@
 #pragma once
-#ifndef _OTV_MESH_WRAPPER_H_
-#define _OTV_MESH_WRAPPER_H_
+#ifndef _MESH_WRAPPER_H_
+#define _MESH_WRAPPER_H_
 
-#include "otv_common.h"
-#include "otv_helper.h"
+#include "common.h"
+#include "helper.h"
 
 namespace otv {
 
@@ -160,4 +160,4 @@ namespace otv {
     };
 };
 
-#endif//_OTV_MESH_WRAPPER_H_
+#endif//_MESH_WRAPPER_H_
