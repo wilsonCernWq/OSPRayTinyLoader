@@ -15,40 +15,42 @@
 namespace otv 
 {
     // window size
-    static unsigned int WINX = 0, WINY = 0;
-    static ospcommon::vec2i WINSIZE(1024, 1024);
+    extern unsigned int WINX, WINY;
+    extern ospcommon::vec2i WINSIZE;
 
     // texture maps
-    static uint32_t*          ofb;
-    static cyGLRenderBuffer2D gfb;
+    extern uint32_t*          ofb;
+    extern cyGLRenderBuffer2D gfb;
 
     // OSPRay objects
-    static OSPModel       world;
-    static OSPCamera      camera;
-    static OSPRenderer    renderer;
-    static OSPFrameBuffer framebuffer;
+    extern OSPModel       world;
+    extern OSPCamera      camera;
+    extern OSPRenderer    renderer;
+    extern OSPFrameBuffer framebuffer;
 
     // camera objects
-    static float camZoom = 1.0f;
-    static ospcommon::vec3f camFocus(0, 0, 0);
-    static ospcommon::vec3f camPos(0, 0, 10);
-    static ospcommon::vec3f camUp(0, 1, 0);
-    static ospcommon::vec3f camDir = camFocus - camPos;
-    static Trackball camRotate(true);
+    extern float camZoom;
+    extern ospcommon::vec3f camFocus;
+    extern ospcommon::vec3f camPos;
+    extern ospcommon::vec3f camUp;
+    extern ospcommon::vec3f camDir;
+    extern Trackball camRotate;
 
     // mesh
-    static Mesh mesh;
+    extern Mesh mesh;
 };
 
 namespace otv 
 {
+    void KeyboardAction(int key, int x, int y);
+
     void UpdateCamera(bool cleanbuffer = true);
 
     void GetMouseButton(GLint button, GLint state, GLint x, GLint y);
-
     void GetMousePosition(GLint x, GLint y);
 
     void GetNormalKeys(unsigned char key, GLint x, GLint y);
+    void GetSpecialKeys(int key, GLint x, GLint y);
 
     void Clean();
 

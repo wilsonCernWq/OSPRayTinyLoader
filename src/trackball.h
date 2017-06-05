@@ -22,10 +22,9 @@ namespace otv {
 	cy::Point3f  position_prev;
 	float position_surf[2];
     public:
-
 	/** constractors */
 	Trackball() {}
-    Trackball(bool i) : inverse_mode(i) {}
+        Trackball(bool i) : inverse_mode(i) {}
 
 	void SetRadius(const float r) { radius = r; }
 	void SetInverseMode(bool r) { inverse_mode = r; }
@@ -57,7 +56,8 @@ namespace otv {
 	    dir = inverse_mode ? -dir : dir;
 	    // compute rotation angle
 	    float angle = position_prev.Dot(position) / position_prev.Length() / position.Length();
-	    if (angle > 0.99999999999) { // to prevent position_prev == position, this will cause invalid value
+	    if (angle > 0.99999999999) { 
+                // to prevent position_prev == position, this will cause invalid value
 		return;
 	    }
 	    else { // compute rotation

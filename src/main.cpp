@@ -1,60 +1,92 @@
-#define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
-
 #include "common.h"
 #include "helper.h"
 #include "trackball.h"
 #include "meshwrapper.h"
 #include "callbacks.h"
 
+// Global Variables
+namespace otv 
+{
+    // window size
+    unsigned int WINX = 0, WINY = 0;
+    ospcommon::vec2i WINSIZE(1024, 1024);
+
+    // texture maps
+    uint32_t*          ofb;
+    cyGLRenderBuffer2D gfb;
+
+    // OSPRay objects
+    OSPModel       world;
+    OSPCamera      camera;
+    OSPRenderer    renderer;
+    OSPFrameBuffer framebuffer;
+
+    // camera objects
+    float camZoom = 1.0f;
+    ospcommon::vec3f camFocus(0, 0, 0);
+    ospcommon::vec3f camPos(0, 0, 10);
+    ospcommon::vec3f camUp(0, 1, 0);
+    ospcommon::vec3f camDir = camFocus - camPos;
+    Trackball camRotate(true);
+
+    // mesh
+    Mesh mesh;
+};
+
 using namespace otv;
 
 void render()
 {
+    // render
     ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+    // put framebuffer to screen
     gfb.BindTexture();
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WINSIZE.x, WINSIZE.y, GL_RGBA, GL_UNSIGNED_BYTE, ofb);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
-    glBlitFramebuffer(0, 0, WINSIZE.x, WINSIZE.y, 0, 0, WINSIZE.x, WINSIZE.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, WINSIZE.x, WINSIZE.y, 
+		      0, 0, WINSIZE.x, WINSIZE.y, 
+		      GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glutSwapBuffers();
 }
 
-int main(int argc, const char **argv)
+void setupospray(const char* meshfile) 
 {
-    //! check argument number
-    if (argc < 2) {
-	std::cerr << "The program needs at lease one input argument!" << std::endl;
-	exit(EXIT_FAILURE);
-    }
-    ospInit(&argc, argv);
-
     //! create world and renderer
     world = ospNewModel();
     renderer = ospNewRenderer("scivis"); // possible options: "pathtracer" "raytracer"
 
     //! geometry/volume
-    mesh.LoadFromFileObj(argv[1]);
-    camFocus = otv::make_vec(0.5 * (mesh.GetBBoxMax() + mesh.GetBBoxMin()));
-    camPos *= (mesh.GetBBoxMax() - mesh.GetBBoxMin()).Length() / 10.0f;
+    mesh.LoadFromFileObj(meshfile);
+    camFocus = otv::make_vec(mesh.GetCenter());
+    camZoom  = otv::mesh.GetDiagonalLength()/10.0f;
     for (int i = 0; i < mesh.geometries.size(); ++i) {
 	if (mesh.geometries[i].num_faces != 0) {
 	    OSPGeometry geometry_data = ospNewGeometry("triangles");
 	    //! vertex
-	    OSPData vertex_data = ospNewData(mesh.geometries[i].vertex.size() / 3, OSP_FLOAT3, mesh.geometries[i].vertex.data(), OSP_DATA_SHARED_BUFFER);
+	    OSPData vertex_data = ospNewData(mesh.geometries[i].vertex.size() / 3, 
+					     OSP_FLOAT3, mesh.geometries[i].vertex.data(), 
+					     OSP_DATA_SHARED_BUFFER);
 	    ospCommit(vertex_data);
 	    ospSetObject(geometry_data, "vertex", vertex_data);
 	    //! index
-	    OSPData index_data = ospNewData(mesh.geometries[i].index.size() / 3, OSP_INT3, mesh.geometries[i].index.data(), OSP_DATA_SHARED_BUFFER);
+	    OSPData index_data = ospNewData(mesh.geometries[i].index.size() / 3, 
+					    OSP_INT3, mesh.geometries[i].index.data(), 
+					    OSP_DATA_SHARED_BUFFER);
 	    ospCommit(index_data);
 	    ospSetObject(geometry_data, "index", index_data);
 	    //! normal
 	    if (mesh.geometries[i].has_normal) {
-		OSPData normal_data = ospNewData(mesh.geometries[i].normal.size() / 3, OSP_FLOAT3, mesh.geometries[i].normal.data(), OSP_DATA_SHARED_BUFFER);
+		OSPData normal_data = ospNewData(mesh.geometries[i].normal.size() / 3, 
+						 OSP_FLOAT3, mesh.geometries[i].normal.data(), 
+						 OSP_DATA_SHARED_BUFFER);
 		ospCommit(normal_data);
 		ospSetObject(geometry_data, "vertex.normal", normal_data);
 	    }
 	    //! texture coordinate
 	    if (mesh.geometries[i].has_texcoord) {
-		OSPData texcoord_data = ospNewData(mesh.geometries[i].texcoord.size() / 2, OSP_FLOAT2, mesh.geometries[i].texcoord.data(), OSP_DATA_SHARED_BUFFER);
+		OSPData texcoord_data = ospNewData(mesh.geometries[i].texcoord.size() / 2, 
+						   OSP_FLOAT2, mesh.geometries[i].texcoord.data(), 
+						   OSP_DATA_SHARED_BUFFER);
 		ospCommit(texcoord_data);
 		ospSetObject(geometry_data, "vertex.texcoord", texcoord_data);
 	    }
@@ -70,27 +102,37 @@ int main(int argc, const char **argv)
 	    ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
 	    if (!mesh.textures[i].map_Kd.IsEmpty()) {
 		auto tex_dim = otv::make_vec(mesh.textures[i].map_Kd.Size());
-		OSPTexture2D map_Kd = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Kd.data.data(), 1);
+		OSPTexture2D map_Kd = ospNewTexture2D((osp::vec2i&)tex_dim, 
+						      OSP_TEXTURE_RGBA8, 
+						      mesh.textures[i].map_Kd.data.data(), 1);
 		ospSetObject(mtl_data, "map_Kd", map_Kd);
 	    }
 	    if (!mesh.textures[i].map_Ks.IsEmpty()) {
 		auto tex_dim = otv::make_vec(mesh.textures[i].map_Ks.Size());
-		OSPTexture2D map_Ks = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ks.data.data(), 1);
+		OSPTexture2D map_Ks = ospNewTexture2D((osp::vec2i&)tex_dim, 
+						      OSP_TEXTURE_RGBA8, 
+						      mesh.textures[i].map_Ks.data.data(), 1);
 		ospSetObject(mtl_data, "map_Ks", map_Ks);
 	    }
 	    if (!mesh.textures[i].map_Ns.IsEmpty()) {
 		auto tex_dim = otv::make_vec(mesh.textures[i].map_Ns.Size());
-		OSPTexture2D map_Ns = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Ns.data.data(), 1);
+		OSPTexture2D map_Ns = ospNewTexture2D((osp::vec2i&)tex_dim, 
+						      OSP_TEXTURE_RGBA8, 
+						      mesh.textures[i].map_Ns.data.data(), 1);
 		ospSetObject(mtl_data, "map_Ns", map_Ns);
 	    }
 	    if (!mesh.textures[i].map_d.IsEmpty()) {
 		auto tex_dim = otv::make_vec(mesh.textures[i].map_d.Size());
-		OSPTexture2D map_d = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_d.data.data(), 1);
+		OSPTexture2D map_d = ospNewTexture2D((osp::vec2i&)tex_dim, 
+						     OSP_TEXTURE_RGBA8, 
+						     mesh.textures[i].map_d.data.data(), 1);
 		ospSetObject(mtl_data, "map_d", map_d);
 	    }
 	    if (!mesh.textures[i].map_Bump.IsEmpty()) {
 		auto tex_dim = otv::make_vec(mesh.textures[i].map_Bump.Size());
-		OSPTexture2D map_Bump = ospNewTexture2D((osp::vec2i&)tex_dim, OSP_TEXTURE_RGBA8, mesh.textures[i].map_Bump.data.data(), 1);
+		OSPTexture2D map_Bump = ospNewTexture2D((osp::vec2i&)tex_dim, 
+							OSP_TEXTURE_RGBA8, 
+							mesh.textures[i].map_Bump.data.data(), 1);
 		ospSetObject(mtl_data, "map_Bump", map_Bump);
 	    }
 	    ospCommit(mtl_data);
@@ -128,6 +170,21 @@ int main(int argc, const char **argv)
     ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
     ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
     ofb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+}
+
+int main(int argc, const char **argv)
+{
+    //! check argument number
+    if (argc < 2) {
+	std::cerr << "The program needs at lease one input argument!" << std::endl;
+	exit(EXIT_FAILURE);
+    }
+
+    //! setting up ospray
+    {
+	ospInit(&argc, argv);
+	setupospray(argv[1]);
+    }
 
     //! initialize openGL
     {
@@ -153,6 +210,7 @@ int main(int argc, const char **argv)
 	glutMouseFunc(GetMouseButton);
 	glutMotionFunc(GetMousePosition);
 	glutKeyboardFunc(GetNormalKeys);
+	glutSpecialFunc(GetSpecialKeys);
 	glutInitContextFlags(GLUT_DEBUG);
 	glutMainLoop();
     }

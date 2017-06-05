@@ -3,6 +3,25 @@
 using namespace ospcommon;
 using namespace otv;
 
+void otv::KeyboardAction(int key, int x, int y)
+{
+    switch (key) {
+    case 27:
+	glutLeaveMainLoop();
+	break;
+    case (int)GLUT_KEY_UP:
+	camZoom *= .9f;
+	UpdateCamera();
+	break;
+    case (int)GLUT_KEY_DOWN:
+	camZoom /= .9f;
+	UpdateCamera();
+	break;
+    default:
+	break;
+    }
+}
+
 void otv::UpdateCamera(bool cleanbuffer)
 {
     camDir = camFocus - camPos;
@@ -32,7 +51,11 @@ void otv::GetMousePosition(GLint x, GLint y) {
 }
 
 void otv::GetNormalKeys(unsigned char key, GLint x, GLint y) {
-    if (key == 27) { glutLeaveMainLoop(); }
+    KeyboardAction((int) key, x, y);
+}
+
+void otv::GetSpecialKeys(int key, GLint x, GLint y) {
+    KeyboardAction(key, x, y);
 }
 
 void otv::Clean()
