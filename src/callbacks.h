@@ -23,18 +23,32 @@ namespace otv
     extern cyGLRenderBuffer2D gfb;
 
     // OSPRay objects
-    extern OSPModel       world;
-    extern OSPCamera      camera;
+    extern OSPModel       world;    
     extern OSPRenderer    renderer;
     extern OSPFrameBuffer framebuffer;
 
     // camera objects
-    extern float camZoom;
-    extern ospcommon::vec3f camFocus;
-    extern ospcommon::vec3f camPos;
-    extern ospcommon::vec3f camUp;
-    extern ospcommon::vec3f camDir;
-    extern Trackball camRotate;
+    class Camera : public Trackball {
+    public:
+	float zoom = 1.0f;
+	ospcommon::vec3f focus = ospcommon::vec3f(0, 0, 0);
+	ospcommon::vec3f pos = ospcommon::vec3f(0, 0, 10);
+	ospcommon::vec3f up = ospcommon::vec3f(0, 1, 0);
+	ospcommon::vec3f dir = focus - pos;
+	Trackball rotate = Trackball(true);
+	OSPCamera ospCamera;
+    public:
+	void Update(bool cleanbuffer = true);
+	void Init() 
+	{
+	    ospCamera = ospNewCamera("perspective");
+	    ospSetf(ospCamera, "aspect", 
+		    static_cast<float>(WINSIZE.x) / 
+		    static_cast<float>(WINSIZE.y));
+	    this->Update(false);
+	}
+    };
+    extern Camera camera;
 
     // mesh
     extern Mesh mesh;
@@ -43,8 +57,6 @@ namespace otv
 namespace otv 
 {
     void KeyboardAction(int key, int x, int y);
-
-    void UpdateCamera(bool cleanbuffer = true);
 
     void GetMouseButton(GLint button, GLint state, GLint x, GLint y);
     void GetMousePosition(GLint x, GLint y);

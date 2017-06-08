@@ -10,28 +10,30 @@ void otv::KeyboardAction(int key, int x, int y)
 	glutLeaveMainLoop();
 	break;
     case (int)GLUT_KEY_UP:
-	camZoom *= .9f;
-	UpdateCamera();
+	camera.zoom *= .9f;
+	camera.Update();
 	break;
     case (int)GLUT_KEY_DOWN:
-	camZoom /= .9f;
-	UpdateCamera();
+	camera.zoom /= .9f;
+	camera.Update();
 	break;
     default:
 	break;
     }
 }
 
-void otv::UpdateCamera(bool cleanbuffer)
+void otv::Camera::Update(bool cleanbuffer)
 {
-    camDir = camFocus - camPos;
-    auto currCamUp = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camUp, 0.0f));
-    auto currCamDir = cyPoint3f(camRotate.Matrix() * cyPoint4f((cyPoint3f)camDir, 0.0f));
-    auto currCamPos = (cyPoint3f)camFocus - currCamDir * camZoom;
-    ospSetVec3f(camera, "pos", (osp::vec3f&)currCamPos);
-    ospSetVec3f(camera, "dir", (osp::vec3f&)currCamDir);
-    ospSetVec3f(camera, "up",  (osp::vec3f&)currCamUp);
-    ospCommit(camera);
+    dir = focus - pos;
+    auto currCamUp  = cyPoint3f(Trackball::Matrix() * 
+				cyPoint4f((cyPoint3f)up, 0.0f));
+    auto currCamDir = cyPoint3f(Trackball::Matrix() * 
+				cyPoint4f((cyPoint3f)dir, 0.0f));
+    auto currCamPos = (cyPoint3f)focus - currCamDir * zoom;
+    ospSetVec3f(ospCamera, "pos", (osp::vec3f&)currCamPos);
+    ospSetVec3f(ospCamera, "dir", (osp::vec3f&)currCamDir);
+    ospSetVec3f(ospCamera, "up",  (osp::vec3f&)currCamUp);
+    ospCommit(ospCamera);
     if (cleanbuffer) {
 	ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
     }
@@ -40,14 +42,14 @@ void otv::UpdateCamera(bool cleanbuffer)
 void otv::GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
     static cy::Point2f p;
     otv::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
-    camRotate.BeginDrag(p[0], p[1]);
+    otv::camera.BeginDrag(p[0], p[1]);
 }
 
 void otv::GetMousePosition(GLint x, GLint y) {
     static cy::Point2f p;
     otv::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
-    camRotate.Drag(p[0], p[1]);
-    UpdateCamera();
+    otv::camera.Drag(p[0], p[1]);
+    otv::camera.Update();
 }
 
 void otv::GetNormalKeys(unsigned char key, GLint x, GLint y) {
@@ -63,7 +65,7 @@ void otv::Clean()
     gfb.Delete();
     ospUnmapFrameBuffer(ofb, framebuffer);
     ospRelease(world);
-    ospRelease(camera);
+    ospRelease(camera.ospCamera);
     ospRelease(renderer);
     ospRelease(framebuffer);
 }

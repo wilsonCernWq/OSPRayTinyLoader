@@ -97,3 +97,8 @@ IF(LodePNG_FOUND)
 ELSE()
   MESSAGE(FATAL_ERROR " LodePNG not found!")
 ENDIF()
+#
+#--- ImGui
+#
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/imgui")
+LIST(APPEND COMMON_LIBS ${LodePNG_LIBRARIES} imgui)
