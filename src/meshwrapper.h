@@ -53,7 +53,7 @@ namespace otv {
 	std::vector<OSPTextureData> textures;
 	std::vector<Geometry> geometries;
     public:
-	/** Accessors */
+	/** \brief Accessors */
 	const char* DirPath() { return dirpath == "" ? nullptr : dirpath.c_str(); }
 	cyPoint3f GetBBoxMax() { return cyPoint3f(bbox_max[0], bbox_max[1], bbox_max[2]); }
 	cyPoint3f GetBBoxMin() { return cyPoint3f(bbox_min[0], bbox_min[1], bbox_min[2]); }
@@ -67,9 +67,13 @@ namespace otv {
 	    return (GetBBoxMax() - GetBBoxMin()).Length();
 	}
 	/** 
-	 * Overriding LoadFromFileObj function for TriMesh, force to triangulate
+	 * \brief Overriding LoadFromFileObj function for TriMesh, force to triangulate
 	 */
 	bool LoadFromFileObj(const char* fname, bool loadMtl = true);
+	/**
+	 * \brief OSPRay helper
+	 */
+	void AddToModel(OSPModel& model, OSPRenderer& renderer);
     };
 };
 

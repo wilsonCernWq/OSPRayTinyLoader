@@ -11,16 +11,17 @@ namespace otv
     unsigned int WINX = 0, WINY = 0;
     ospcommon::vec2i WINSIZE(1024, 1024);
 
-    // texture maps
-    uint32_t*          ofb;
-    cyGLRenderBuffer2D gfb;
-
     // OSPRay objects
     OSPModel       world;
     OSPRenderer    renderer;
-    OSPFrameBuffer framebuffer;
 
-    // camera objects
+    // framebuffer object
+    FrameBuffer framebuffer;
+    
+    // light object
+    Light light;
+
+    // camera object
     Camera camera;
 
     // mesh
@@ -32,16 +33,7 @@ using namespace otv;
 void render()
 {
     // render
-    ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-    // put framebuffer to screen
-    gfb.BindTexture();
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WINSIZE.x, WINSIZE.y, 
-		    GL_RGBA, GL_UNSIGNED_BYTE, ofb);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
-    glBlitFramebuffer(0, 0, WINSIZE.x, WINSIZE.y, 
-		      0, 0, WINSIZE.x, WINSIZE.y, 
-		      GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    glutSwapBuffers();
+    framebuffer.RenderOpenGL();
 }
 
 void setupospray(const char* meshfile) 
@@ -49,133 +41,29 @@ void setupospray(const char* meshfile)
     //! create world and renderer
     world = ospNewModel();
     // possible options: "pathtracer" "raytracer"
-    renderer = ospNewRenderer("scivis");     
+    renderer = ospNewRenderer("pt");     
 
     //! geometry/volume
     mesh.LoadFromFileObj(meshfile);
-    otv::camera.focus = otv::make_vec(mesh.GetCenter());
-    otv::camera.zoom  = otv::mesh.GetDiagonalLength()/10.0f;
-    for (int i = 0; i < mesh.geometries.size(); ++i) {
-	if (mesh.geometries[i].num_faces != 0) {
-	    OSPGeometry geometry_data = ospNewGeometry("triangles");
-	    //! vertex
-	    OSPData vertex_data =
-		ospNewData(mesh.geometries[i].vertex.size() / 3, 
-			   OSP_FLOAT3, mesh.geometries[i].vertex.data(), 
-			   OSP_DATA_SHARED_BUFFER);
-	    ospCommit(vertex_data);
-	    ospSetObject(geometry_data, "vertex", vertex_data);
-	    //! index
-	    OSPData index_data = 
-		ospNewData(mesh.geometries[i].index.size() / 3, 
-			   OSP_INT3, mesh.geometries[i].index.data(), 
-			   OSP_DATA_SHARED_BUFFER);
-	    ospCommit(index_data);
-	    ospSetObject(geometry_data, "index", index_data);
-	    //! normal
-	    if (mesh.geometries[i].has_normal) {
-		OSPData normal_data =
-		    ospNewData(mesh.geometries[i].normal.size() / 3, 
-			       OSP_FLOAT3, mesh.geometries[i].normal.data(), 
-			       OSP_DATA_SHARED_BUFFER);
-		ospCommit(normal_data);
-		ospSetObject(geometry_data, "vertex.normal", normal_data);
-	    }
-	    //! texture coordinate
-	    if (mesh.geometries[i].has_texcoord) {
-		OSPData texcoord_data = 
-		    ospNewData(mesh.geometries[i].texcoord.size() / 2, 
-			       OSP_FLOAT2, mesh.geometries[i].texcoord.data(), 
-			       OSP_DATA_SHARED_BUFFER);
-		ospCommit(texcoord_data);
-		ospSetObject(geometry_data, "vertex.texcoord", texcoord_data);
-	    }
-	    //! material
-	    OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
-	    ospcommon::vec3f mtl_Tf = otv::make_vec(mesh.GetMaterial(i, "Tf"));
-	    ospcommon::vec3f mtl_Kd = otv::make_vec(mesh.GetMaterial(i, "Kd"));
-	    ospcommon::vec3f mtl_Ks = otv::make_vec(mesh.GetMaterial(i, "Ks"));
-	    ospSetVec3f(mtl_data, "Tf", (osp::vec3f&)mtl_Tf);
-	    ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mtl_Kd);
-	    ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mtl_Ks);
-	    ospSet1f(mtl_data, "Ns", mesh.tiny.materials[i].shininess);
-	    ospSet1f(mtl_data, "d",  mesh.tiny.materials[i].dissolve);
-	    if (!mesh.textures[i].map_Kd.IsEmpty()) {
-		auto tex_dim = otv::make_vec(mesh.textures[i].map_Kd.Size());
-		OSPTexture2D map_Kd = 
-		    ospNewTexture2D((osp::vec2i&)tex_dim, 
-				    OSP_TEXTURE_RGBA8, 
-				    mesh.textures[i].map_Kd.data.data(), 1);
-		ospSetObject(mtl_data, "map_Kd", map_Kd);
-	    }
-	    if (!mesh.textures[i].map_Ks.IsEmpty()) {
-		auto tex_dim = otv::make_vec(mesh.textures[i].map_Ks.Size());
-		OSPTexture2D map_Ks = 
-		    ospNewTexture2D((osp::vec2i&)tex_dim, 
-				    OSP_TEXTURE_RGBA8, 
-				    mesh.textures[i].map_Ks.data.data(), 1);
-		ospSetObject(mtl_data, "map_Ks", map_Ks);
-	    }
-	    if (!mesh.textures[i].map_Ns.IsEmpty()) {
-		auto tex_dim = otv::make_vec(mesh.textures[i].map_Ns.Size());
-		OSPTexture2D map_Ns = 
-		    ospNewTexture2D((osp::vec2i&)tex_dim, 
-				    OSP_TEXTURE_RGBA8, 
-				    mesh.textures[i].map_Ns.data.data(), 1);
-		ospSetObject(mtl_data, "map_Ns", map_Ns);
-	    }
-	    if (!mesh.textures[i].map_d.IsEmpty()) {
-		auto tex_dim = otv::make_vec(mesh.textures[i].map_d.Size());
-		OSPTexture2D map_d = 
-		    ospNewTexture2D((osp::vec2i&)tex_dim, 
-				    OSP_TEXTURE_RGBA8, 
-				    mesh.textures[i].map_d.data.data(), 1);
-		ospSetObject(mtl_data, "map_d", map_d);
-	    }
-	    if (!mesh.textures[i].map_Bump.IsEmpty()) {
-		auto tex_dim = otv::make_vec(mesh.textures[i].map_Bump.Size());
-		OSPTexture2D map_Bump =
-		    ospNewTexture2D((osp::vec2i&)tex_dim, 
-				    OSP_TEXTURE_RGBA8, 
-				    mesh.textures[i].map_Bump.data.data(), 1);
-		ospSetObject(mtl_data, "map_Bump", map_Bump);
-	    }
-	    ospCommit(mtl_data);
-	    ospSetMaterial(geometry_data, mtl_data);
-	    //! commit geometry
-	    ospCommit(geometry_data);
-	    ospAddGeometry(world, geometry_data);
-	}
-    }
+    mesh.AddToModel(world, renderer);
     ospCommit(world);
+    otv::camera.SetFocus(otv::make_vec(mesh.GetCenter()));
+    otv::camera.SetZoom(otv::mesh.GetDiagonalLength()/10.0f);
 
     //! camera
-    otv::camera.Init();
+    otv::camera.Init(WINSIZE);
 
     //! lighting
-    OSPLight ambient_light = ospNewLight(renderer, "AmbientLight");
-    ospCommit(ambient_light);
-    OSPLight directional_light = ospNewLight(renderer, "DirectionalLight");
-    ospSetVec3f(directional_light, "direction", osp::vec3f{ 0.0f, 11.0f, 0.0f});
-    ospCommit(directional_light);
-    std::vector<OSPLight> light_list { ambient_light, directional_light };
-    OSPData lights = ospNewData(light_list.size(), OSP_OBJECT, 
-				light_list.data());
-    ospCommit(lights);
+    light.Init(renderer);
 
     //! renderer
-    ospSetData(renderer, "lights", lights);
     ospSetObject(renderer, "model", world);
-    ospSetObject(renderer, "camera", camera.ospCamera);
+    ospSetObject(renderer, "camera", camera.GetOSPCamera());
     ospCommit(renderer);
 
-    //! render to buffer
-    framebuffer = ospNewFrameBuffer((osp::vec2i&)WINSIZE, 
-				    OSP_FB_SRGBA, 
-				    OSP_FB_COLOR | OSP_FB_ACCUM);
-    ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-    ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-    ofb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+    // framebuffer
+    framebuffer.InitRenderer(renderer, WINSIZE);
+    
 }
 
 int main(int argc, const char **argv)
@@ -185,12 +73,6 @@ int main(int argc, const char **argv)
 	std::cerr << "The program needs at lease one input argument!"
 		  << std::endl;
 	exit(EXIT_FAILURE);
-    }
-
-    //! setting up ospray
-    {
-	ospInit(&argc, argv);
-	setupospray(argv[1]);
     }
 
     //! initialize openGL
@@ -206,7 +88,12 @@ int main(int argc, const char **argv)
 		      << glewGetErrorString(err) << std::endl;
 	    return EXIT_FAILURE;
 	}
-	gfb.Initialize(true, 4, WINSIZE.x, WINSIZE.y);
+    }
+
+    //! setting up ospray
+    {
+	ospInit(&argc, argv);
+	setupospray(argv[1]);
     }
 
     // execute the program

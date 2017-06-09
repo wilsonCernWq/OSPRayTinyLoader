@@ -22,7 +22,11 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
     //! load mesh from file
     dirpath = SplitPath(fname);
     tiny.clear();
-    bool succeed = tinyobj::LoadObj(&(tiny.attributes), &(tiny.shapes), &(tiny.materials), &(tiny.err), fname, DirPath(), true);
+    bool succeed = tinyobj::LoadObj(&(tiny.attributes), 
+				    &(tiny.shapes), 
+				    &(tiny.materials), 
+				    &(tiny.err), 
+				    fname, DirPath(), true);
     if (!tiny.err.empty()) { std::cerr << tiny.err << std::endl; }
     if (!succeed) { return false; }
     //! parse loaded mesh
@@ -36,14 +40,16 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
     for (int i = 0; i < tiny.materials.size(); ++i) { geometries[i].mtl_index = 1; };
     for (size_t s = 0; s < tiny.shapes.size(); s++) { // Loop over shapes
 	size_t index_offset = 0;
-	for (size_t f = 0; f < tiny.shapes[s].mesh.num_face_vertices.size(); f++) { // Loop over faces (polygon)
+	for (size_t f = 0; f < tiny.shapes[s].mesh.num_face_vertices.size(); f++) { 
+            // Loop over faces (polygon)
 	    //! per-face material
 	    int mtl_index = tiny.shapes[s].mesh.material_ids[f];
 	    int geo_index = mtl_index;
 	    if (geo_index < 0) { 
 		std::cerr << "wrong index" << std::endl; exit(EXIT_FAILURE); 
 	    }
-	    int fv = tiny.shapes[s].mesh.num_face_vertices[f]; // number of vertices of this face
+	    // number of vertices of this face
+	    int fv = tiny.shapes[s].mesh.num_face_vertices[f]; 
 	    if (fv != 3) { 
 		std::cerr << "non triangle" << std::endl; exit(EXIT_FAILURE); 
 	    }
@@ -99,4 +105,100 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
 	loadimg(textures[i].map_Bump, tiny.materials[i].bump_texname, dirpath);
     }
     return true;
+}
+
+void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer) 
+{
+    for (int i = 0; i < this->geometries.size(); ++i) {
+	if (this->geometries[i].num_faces != 0) {
+	    OSPGeometry gdata = ospNewGeometry("triangles");
+	    //! vertex
+	    OSPData vdata =
+		ospNewData(this->geometries[i].vertex.size() / 3, 
+			   OSP_FLOAT3, this->geometries[i].vertex.data(), 
+			   OSP_DATA_SHARED_BUFFER);
+	    ospCommit(vdata);
+	    ospSetObject(gdata, "vertex", vdata);
+	    //! index
+	    OSPData idata = 
+		ospNewData(this->geometries[i].index.size() / 3, 
+			   OSP_INT3, this->geometries[i].index.data(), 
+			   OSP_DATA_SHARED_BUFFER);
+	    ospCommit(idata);
+	    ospSetObject(gdata, "index", idata);
+	    //! normal
+	    if (this->geometries[i].has_normal) {
+		OSPData ndata =
+		    ospNewData(this->geometries[i].normal.size() / 3, 
+			       OSP_FLOAT3, this->geometries[i].normal.data(), 
+			       OSP_DATA_SHARED_BUFFER);
+		ospCommit(ndata);
+		ospSetObject(gdata, "vertex.normal", ndata);
+	    }
+	    //! texture coordinate
+	    if (this->geometries[i].has_texcoord) {
+		OSPData tdata = 
+		    ospNewData(this->geometries[i].texcoord.size() / 2, 
+			       OSP_FLOAT2, this->geometries[i].texcoord.data(), 
+			       OSP_DATA_SHARED_BUFFER);
+		ospCommit(tdata);
+		ospSetObject(gdata, "vertex.texcoord", tdata);
+	    }
+	    //! material
+	    OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
+	    ospcommon::vec3f mtl_Tf = otv::make_vec(this->GetMaterial(i, "Tf"));
+	    ospcommon::vec3f mtl_Kd = otv::make_vec(this->GetMaterial(i, "Kd"));
+	    ospcommon::vec3f mtl_Ks = otv::make_vec(this->GetMaterial(i, "Ks"));
+	    ospSetVec3f(mtl_data, "Tf", (osp::vec3f&)mtl_Tf);
+	    ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mtl_Kd);
+	    ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mtl_Ks);
+	    ospSet1f(mtl_data, "Ns", this->tiny.materials[i].shininess);
+	    ospSet1f(mtl_data, "d",  this->tiny.materials[i].dissolve);	    
+	    if (!this->textures[i].map_Kd.IsEmpty()) {
+	    	auto tex_dim = otv::make_vec(this->textures[i].map_Kd.Size());
+	    	OSPTexture2D map_Kd = 
+	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
+	    			    OSP_TEXTURE_RGBA8, 
+	    			    this->textures[i].map_Kd.data.data(), 1);
+	    	ospSetObject(mtl_data, "map_Kd", map_Kd);
+	    }
+	    if (!this->textures[i].map_Ks.IsEmpty()) {
+	    	auto tex_dim = otv::make_vec(this->textures[i].map_Ks.Size());
+	    	OSPTexture2D map_Ks = 
+	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
+	    			    OSP_TEXTURE_RGBA8, 
+	    			    this->textures[i].map_Ks.data.data(), 1);
+	    	ospSetObject(mtl_data, "map_Ks", map_Ks);
+	    }
+	    if (!this->textures[i].map_Ns.IsEmpty()) {
+	    	auto tex_dim = otv::make_vec(this->textures[i].map_Ns.Size());
+	    	OSPTexture2D map_Ns = 
+	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
+	    			    OSP_TEXTURE_RGBA8, 
+	    			    this->textures[i].map_Ns.data.data(), 1);
+	    	ospSetObject(mtl_data, "map_Ns", map_Ns);
+	    }
+	    if (!this->textures[i].map_d.IsEmpty()) {
+	    	auto tex_dim = otv::make_vec(this->textures[i].map_d.Size());
+	    	OSPTexture2D map_d = 
+	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
+	    			    OSP_TEXTURE_RGBA8, 
+	    			    this->textures[i].map_d.data.data(), 1);
+	    	ospSetObject(mtl_data, "map_d", map_d);
+	    }
+	    if (!this->textures[i].map_Bump.IsEmpty()) {
+	    	auto tex_dim = otv::make_vec(this->textures[i].map_Bump.Size());
+	    	OSPTexture2D map_Bump =
+	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
+	    			    OSP_TEXTURE_RGBA8, 
+	    			    this->textures[i].map_Bump.data.data(), 1);
+	    	ospSetObject(mtl_data, "map_Bump", map_Bump);
+	    }
+	    ospCommit(mtl_data);
+	    ospSetMaterial(gdata, mtl_data);
+	    //! commit geometry
+	    ospCommit(gdata);
+	    ospAddGeometry(model, gdata);
+	}
+    }
 }
