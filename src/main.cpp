@@ -40,8 +40,10 @@ void setupospray(const char* meshfile)
 {
     //! create world and renderer
     world = ospNewModel();
-    // possible options: "pathtracer" "raytracer"
-    renderer = ospNewRenderer("pt");     
+
+    // possible options: "scivis" "pathtracer" "raytracer"
+    renderer = ospNewRenderer("pathtracer");
+    //renderer = ospNewRenderer("scivis");
 
     //! geometry/volume
     mesh.LoadFromFileObj(meshfile);
@@ -59,6 +61,16 @@ void setupospray(const char* meshfile)
     //! renderer
     ospSetObject(renderer, "model", world);
     ospSetObject(renderer, "camera", camera.GetOSPCamera());
+
+    //! scivis
+    ospSet1i(renderer, "shadowsEnabled", 1);
+    ospSet1i(renderer, "aoSamples", 2);
+    ospSet1i(renderer, "aoTransparencyEnabled", 1);
+    //! pathtracer
+    ospSet1i(renderer, "spp", 1);
+    ospSet1i(renderer, "maxDepth", 10);
+    ospSet1f(renderer, "varianceThreshold", 0.0f);
+
     ospCommit(renderer);
 
     // framebuffer

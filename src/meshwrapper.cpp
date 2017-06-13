@@ -160,6 +160,7 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
 	    			    OSP_TEXTURE_RGBA8, 
 	    			    this->textures[i].map_Kd.data.data(), 1);
+		ospCommit(map_Kd);
 	    	ospSetObject(mtl_data, "map_Kd", map_Kd);
 	    }
 	    if (!this->textures[i].map_Ks.IsEmpty()) {
@@ -168,6 +169,7 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
 	    			    OSP_TEXTURE_RGBA8, 
 	    			    this->textures[i].map_Ks.data.data(), 1);
+		ospCommit(map_Ks);
 	    	ospSetObject(mtl_data, "map_Ks", map_Ks);
 	    }
 	    if (!this->textures[i].map_Ns.IsEmpty()) {
@@ -176,22 +178,27 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
 	    			    OSP_TEXTURE_RGBA8, 
 	    			    this->textures[i].map_Ns.data.data(), 1);
+		ospCommit(map_Ns);
 	    	ospSetObject(mtl_data, "map_Ns", map_Ns);
 	    }
 	    if (!this->textures[i].map_d.IsEmpty()) {
+		std::cout << "load alpha map" << std::endl;
 	    	auto tex_dim = otv::make_vec(this->textures[i].map_d.Size());
 	    	OSPTexture2D map_d = 
 	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
 	    			    OSP_TEXTURE_RGBA8, 
 	    			    this->textures[i].map_d.data.data(), 1);
+		ospCommit(map_d);
 	    	ospSetObject(mtl_data, "map_d", map_d);
 	    }
 	    if (!this->textures[i].map_Bump.IsEmpty()) {
+		std::cout << "load bump map" << std::endl;
 	    	auto tex_dim = otv::make_vec(this->textures[i].map_Bump.Size());
 	    	OSPTexture2D map_Bump =
 	    	    ospNewTexture2D((osp::vec2i&)tex_dim, 
 	    			    OSP_TEXTURE_RGBA8, 
 	    			    this->textures[i].map_Bump.data.data(), 1);
+		ospCommit(map_Bump);
 	    	ospSetObject(mtl_data, "map_Bump", map_Bump);
 	    }
 	    ospCommit(mtl_data);

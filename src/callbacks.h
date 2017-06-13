@@ -26,15 +26,15 @@ namespace otv
     // light
     class Light : public Trackball {
     private:
-	float Iamb = 0.5f;
-	float Idir = 1.5f;
+	float Iamb = 0.9f;
+	float Idir = 2.00f;
 	// ambient light
 	OSPLight ospAmb;
 	// directional light
 	OSPLight ospDir;
 	float zoom = 1.0f;
 	ospcommon::vec3f focus = ospcommon::vec3f(0, 0, 0);
-	ospcommon::vec3f pos = ospcommon::vec3f(0, 0, 10);
+	ospcommon::vec3f pos = ospcommon::vec3f(0, 0, 2);
 	ospcommon::vec3f up = ospcommon::vec3f(0, 1, 0);
 	ospcommon::vec3f dir = focus - pos;
 	// light list
