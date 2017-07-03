@@ -18,8 +18,6 @@ endif()
 #
 # load required libraries
 include(cmake/common.cmake)
-find_package(ospray REQUIRED)
-include_directories(${OSPRAY_INCLUDE_DIRS})
 #
 # install dlls or shader
 file(GLOB_RECURSE SHADERS "src/*.glsl")
@@ -39,4 +37,6 @@ add_library(osphelper SHARED ${CXX} ${HXX} ${SHADERS})
 target_link_libraries(osphelper ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
 add_executable(osploader ${MAIN})
 target_link_libraries(osploader osphelper ${OSPRAY_LIBRARIES})
-
+#
+# compile ospray apps
+#add_subdirectory(ospray/apps)

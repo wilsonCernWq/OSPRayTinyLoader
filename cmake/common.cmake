@@ -102,3 +102,10 @@ ENDIF()
 #
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/imgui")
 LIST(APPEND COMMON_LIBS ${LodePNG_LIBRARIES} imgui)
+#
+#--- ospray
+#
+find_package(ospray REQUIRED)
+include_directories(${OSPRAY_INCLUDE_DIRS})
+message(STATUS "OSPRay Include: ${OSPRAY_INCLUDE_DIRS}")
+message(STATUS "OSPRay Libraries: ${OSPRAY_LIBRARIES}")
