@@ -4,30 +4,6 @@
 #include "meshwrapper.h"
 #include "callbacks.h"
 
-// Global Variables
-namespace otv 
-{
-    // window size
-    unsigned int WINX = 0, WINY = 0;
-    ospcommon::vec2i WINSIZE(1024, 1024);
-
-    // OSPRay objects
-    OSPModel       world;
-    OSPRenderer    renderer;
-
-    // framebuffer object
-    FrameBuffer framebuffer;
-    
-    // light object
-    Light light;
-
-    // camera object
-    Camera camera;
-
-    // mesh
-    Mesh mesh;
-};
-
 using namespace otv;
 
 void render()

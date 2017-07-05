@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "helper.h"
+#include "light.h"
 #include "camera.h"
 #include "meshwrapper.h"
 #include "framebuffer.h"
@@ -23,40 +24,7 @@ namespace otv
     extern OSPModel       world;    
     extern OSPRenderer    renderer;
 
-    // light
-    class Light : public Trackball {
-    private:
-	float Iamb = 0.9f;
-	float Idir = 2.00f;
-	// ambient light
-	OSPLight ospAmb;
-	// directional light
-	OSPLight ospDir;
-	float zoom = 1.0f;
-	ospcommon::vec3f focus = ospcommon::vec3f(0, 0, 0);
-	ospcommon::vec3f pos = ospcommon::vec3f(0, 0, 2);
-	ospcommon::vec3f up = ospcommon::vec3f(0, 1, 0);
-	ospcommon::vec3f dir = focus - pos;
-	// light list
-	std::vector<OSPLight> lightslist;
-	OSPData lightsdata;
-    public:
-	void Update();
-	void Init(OSPRenderer& renderer) {
-	    ospAmb = ospNewLight(renderer, "AmbientLight");
-	    ospDir = ospNewLight(renderer, "DirectionalLight");
-	    Update();
-	    // setup light data
-	    lightslist.push_back(ospAmb);
-	    lightslist.push_back(ospDir);
-	    lightsdata = ospNewData(lightslist.size(), OSP_OBJECT, 
-				    lightslist.data());
-	    ospCommit(lightsdata);
-	    ospSetData(renderer, "lights", lightsdata);
-	}
-	OSPData& GetLightsData() { return lightsdata; } 
-
-    };
+    // light object
     extern Light light;
 
     // framebuffer object

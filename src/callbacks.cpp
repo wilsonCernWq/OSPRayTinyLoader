@@ -3,26 +3,31 @@
 using namespace ospcommon;
 using namespace otv;
 
-static int mousebutton = -1;
-
-void otv::Light::Update()
+// Global Variables
+namespace otv 
 {
-    // ambient light
-    ospSet1f(this->ospAmb, "intensity", Iamb);
-    ospCommit(this->ospAmb);
-    // directional light
-    this->dir = this->focus - this->pos;
-    auto currCamUp  = cyPoint3f(this->Trackball::Matrix() * 
-				cyPoint4f((cyPoint3f)this->up, 0.0f));
-    auto currCamDir = cyPoint3f(this->Trackball::Matrix() * 
-				cyPoint4f((cyPoint3f)this->dir, 0.0f));
-    auto currCamPos = (cyPoint3f)this->focus - currCamDir * this->zoom;    
-    ospSetVec3f(this->ospDir, "direction", (osp::vec3f&)currCamPos);
-    ospSet1f(this->ospDir, "intensity", Idir);
-    ospSet1f(this->ospDir, "angularDiameter", 53.0f);
-    ospSet1i(this->ospDir, "isVisible", 0);
-    ospCommit(this->ospDir);
-}
+    // window size
+    unsigned int WINX = 0, WINY = 0;
+    ospcommon::vec2i WINSIZE(1024, 1024);
+
+    // OSPRay objects
+    OSPModel       world;
+    OSPRenderer    renderer;
+
+    // framebuffer object
+    FrameBuffer framebuffer;
+    
+    // light object
+    Light light;
+
+    // camera object
+    Camera camera;
+
+    // mesh
+    Mesh mesh;
+};
+
+static int mousebutton = -1;
 
 void otv::KeyboardAction(int key, int x, int y)
 {
