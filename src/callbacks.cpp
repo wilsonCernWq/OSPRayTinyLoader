@@ -20,6 +20,7 @@ void otv::Light::Update()
     ospSetVec3f(this->ospDir, "direction", (osp::vec3f&)currCamPos);
     ospSet1f(this->ospDir, "intensity", Idir);
     ospSet1f(this->ospDir, "angularDiameter", 53.0f);
+    ospSet1i(this->ospDir, "isVisible", 0);
     ospCommit(this->ospDir);
 }
 

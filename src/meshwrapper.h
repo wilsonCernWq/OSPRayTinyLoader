@@ -25,6 +25,11 @@ namespace otv {
 	ImageData map_d;
 	ImageData map_Bump;
     };
+    //! TODO: add support for more formats
+    //! This structure is not very good for handling general mesh format
+    //! I am thinking of adding a loader folder, which contains all
+    //! importers handling various of formats. This requires modifications
+    //! on this Mesh class
     class Mesh {
     private:
 	std::string SplitPath(const std::string& str)
