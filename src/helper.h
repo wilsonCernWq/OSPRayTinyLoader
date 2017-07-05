@@ -118,38 +118,39 @@ namespace otv
 
 namespace otv 
 {
-    struct ImageData {
-	std::vector<unsigned char> data;
-	unsigned int width = 0, height = 0;
-	bool IsEmpty() { return (width * height <= 0); }
-	cy::Point2<int> Size() { return cy::Point2<int>(width, height); }
-    };
+  struct ImageData {
+    std::vector<unsigned char> data;
+    unsigned int width = 0, height = 0;
+    unsigned int channel = 0;
+    bool IsEmpty() { return (width * height <= 0); }
+    cy::Point2<int> Size() { return cy::Point2<int>(width, height); }
+  };
 
-    //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
-    void mouse2screen(int x, int y, float width, float height, cy::Point2f& p);
+  //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
+  void mouse2screen(int x, int y, float width, float height, cy::Point2f& p);
 
-    //! @name load file into string
-    std::string loadfile
-	(const char *filename, std::ostream *outStream = &std::cout);
+  //! @name load file into string
+  std::string loadfile
+    (const char *filename, std::ostream *outStream = &std::cout);
 
-    //! @name copychar: copy string data to char pointer
-    void copychar(char * &str, const std::string& src, int start = 0);
+  //! @name copychar: copy string data to char pointer
+  void copychar(char * &str, const std::string& src, int start = 0);
 
-    //! @name loadimg
-    void loadimgActual
-	(ImageData& image, const char* filename, const std::string path);
+  //! @name loadimg
+  void loadimgActual
+    (ImageData& image, const char* filename, const std::string path);
 
-    void loadimg
-	(ImageData& image, const std::string filename, const std::string path);
+  void loadimg
+    (ImageData& image, const std::string filename, const std::string path);
 
-    void loadimg
-	(ImageData& image, const char* filename, const std::string path);
+  void loadimg
+    (ImageData& image, const char* filename, const std::string path);
 
-    //! @name writePPM Helper function to write the rendered image as PPM file
-    void writePPM
-	(const char *fileName, 
-	 const ospcommon::vec2i &size, 
-	 const uint32_t *pixel);
+  //! @name writePPM Helper function to write the rendered image as PPM file
+  void writePPM
+    (const char *fileName, 
+     const ospcommon::vec2i &size, 
+     const uint32_t *pixel);
 
 };
 
