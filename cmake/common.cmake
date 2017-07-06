@@ -85,7 +85,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/cyCodeBase)
 #
 #--- add CImg
 #   https://github.com/dtschump/CImg
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/CImg/CImg-2.0.0)
+#INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/CImg/CImg-2.0.0)
 #
 #--- lodePNG
 #   http://lodev.org/lodepng/
@@ -108,7 +108,11 @@ LIST(APPEND COMMON_LIBS imgui)
 #
 #--- tiny obj loader
 #
-INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/tinyOBJLoader")
+INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/tinyOBJloader")
+#
+#--- glm
+#
+INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/glm")
 #
 #--- ospray
 #

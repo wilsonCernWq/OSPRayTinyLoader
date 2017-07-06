@@ -59,17 +59,23 @@ namespace otv {
 	std::vector<Geometry> geometries;
     public:
 	/** \brief Accessors */
-	const char* DirPath() { return dirpath == "" ? nullptr : dirpath.c_str(); }
-	cyPoint3f GetBBoxMax() { return cyPoint3f(bbox_max[0], bbox_max[1], bbox_max[2]); }
-	cyPoint3f GetBBoxMin() { return cyPoint3f(bbox_min[0], bbox_min[1], bbox_min[2]); }
+	const char* DirPath() {
+	  return dirpath == "" ? nullptr : dirpath.c_str();
+	}
 	cyPoint3f GetMaterial(unsigned int i, std::string str);
-	cyPoint3f GetCenter() 
+	vec3f GetBBoxMax() {
+	  return vec3f(bbox_max[0], bbox_max[1], bbox_max[2]);
+	}
+	vec3f GetBBoxMin() {
+	  return vec3f(bbox_min[0], bbox_min[1], bbox_min[2]);
+	}
+	vec3f GetCenter() 
 	{
-	    return 0.5 * (GetBBoxMax() + GetBBoxMin());
+	    return 0.5f * (GetBBoxMax() + GetBBoxMin());
 	}
 	float GetDiagonalLength() 
 	{
-	    return (GetBBoxMax() - GetBBoxMin()).Length();
+	  return glm::length(GetBBoxMax() - GetBBoxMin());
 	}
 	/** 
 	 * \brief Overriding LoadFromFileObj function for TriMesh, force to triangulate

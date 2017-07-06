@@ -7,26 +7,26 @@
 #include "trackball.h"
 
 namespace otv {
-  // light
+
   class Light : public Trackball {
   private:
     float Iamb = 0.5f;
     float Idir = 2.00f;
-    // ambient light
+    // lights
     OSPLight ospAmb = nullptr;
-    // directional light
     OSPLight ospDir = nullptr;
+    OSPLight ospSun = nullptr;
     float zoom = 1.0f;
-    ospcommon::vec3f focus = ospcommon::vec3f(0, 0, 0);
-    ospcommon::vec3f pos = ospcommon::vec3f(0, 0, 2);
-    ospcommon::vec3f up = ospcommon::vec3f(0, 1, 0);
-    ospcommon::vec3f dir = focus - pos;
+    vec3f focus = vec3f(0, 0, 0);
+    vec3f pos   = vec3f(0, 0, 2);
+    vec3f up    = vec3f(0, 1, 0);
+    vec3f dir = focus - pos;
   public:
     void Update();
-    void Init(OSPRenderer& renderer) {
-      if (ospAmb) { ospRelease(ospAmb); }
+    void Init(OSPRenderer renderer) {
+      if (ospAmb != nullptr) { ospRelease(ospAmb); }
       ospAmb = ospNewLight(renderer, "AmbientLight");
-      if (ospDir) { ospRelease(ospDir); }
+      if (ospDir != nullptr) { ospRelease(ospDir); }
       ospDir = ospNewLight(renderer, "DirectionalLight");
       Update();
       // setup light data

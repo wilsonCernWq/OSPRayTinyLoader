@@ -8,50 +8,21 @@ using namespace otv;
 
 void render()
 {
-    // render
-    framebuffer.RenderOpenGL();
+  // render
+  world.GetFrameBuffer().RenderOpenGL();
 }
 
 void setupospray(const char* meshfile) 
 {
-    //! create world and renderer
-    world = ospNewModel();
+  std::cout << "load mesh" << std::endl;
+  // geometry/volume
+  mesh.LoadFromFileObj(meshfile);
 
-    // possible options: "scivis" "pathtracer" "raytracer"
-    renderer = ospNewRenderer("pathtracer");
-    //renderer = ospNewRenderer("scivis");
-
-    //! geometry/volume
-    mesh.LoadFromFileObj(meshfile);
-    mesh.AddToModel(world, renderer);
-    ospCommit(world);
-    otv::camera.SetFocus(otv::make_vec(mesh.GetCenter()));
-    otv::camera.SetZoom(otv::mesh.GetDiagonalLength()/10.0f);
-
-    //! camera
-    otv::camera.Init(WINSIZE);
-
-    //! lighting
-    light.Init(renderer);
-
-    //! renderer
-    ospSetObject(renderer, "model", world);
-    ospSetObject(renderer, "camera", camera.GetOSPCamera());
-
-    //! scivis
-    ospSet1i(renderer, "shadowsEnabled", 1);
-    ospSet1i(renderer, "aoSamples", 2);
-    ospSet1i(renderer, "aoTransparencyEnabled", 1);
-    //! pathtracer
-    ospSet1i(renderer, "spp", 1);
-    ospSet1i(renderer, "maxDepth", 10);
-    ospSet1f(renderer, "varianceThreshold", 0.0f);
-
-    ospCommit(renderer);
-
-    // framebuffer
-    framebuffer.InitRenderer(renderer, WINSIZE);
-    
+  std::cout << "create ospray world" << std::endl;
+  // world
+  world.Init(false, ::otv::World::RENDERTYPE::PATHTRACER,
+	     mesh, mesh.GetCenter(),
+	     otv::mesh.GetDiagonalLength()/10.0f);
 }
 
 int main(int argc, const char **argv)
@@ -67,8 +38,8 @@ int main(int argc, const char **argv)
     {
 	glutInit(&argc, const_cast<char**>(argv));
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(WINX, WINY);
-	glutInitWindowSize(WINSIZE.x, WINSIZE.y);
+	glutInitWindowPosition(0, 0);
+	glutInitWindowSize(1024, 1024);
 	glutCreateWindow(argv[0]);
 	GLenum err = glewInit();
 	if (GLEW_OK != err) {
@@ -99,6 +70,6 @@ int main(int argc, const char **argv)
     }
 
     // exit
-    Clean();
+    //world.Clean();
     return EXIT_SUCCESS;
 }

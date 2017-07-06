@@ -6,23 +6,6 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#define NOMINMAX
-
-//
-// include ospray
-//
-#include "ospray/ospray.h"
-#include "ospray/ospcommon/vec.h"
-
-//
-// include cpp standard library
-//
-#include <algorithm>
-#include <iostream>
-#include <limits>
-#include <string>
-#include <vector>
-
 #include <GL/glew.h>
 #ifdef APPLE // apple specific header
 # include <OpenGL/gl.h>
@@ -30,6 +13,7 @@
 # include <GLUT/glut.h>
 #else // Windows need special header
 # if defined(WIN32) || defined(_WIN32) || defined(WIN32) && !defined(CYGWIN)
+#  define NOMINMAX
 #  include <Windows.h>
 # else
 #  if unix // Linux needs extensions for framebuffers
@@ -42,31 +26,38 @@
 # include <GL/glut.h>
 # include <GL/freeglut.h>
 #endif
-
-//
-// include cyCodeBase here
-//
-#include <cyCore.h>
-#include <cyTimer.h>
-#include <cyPoint.h>
-#include <cyMatrix.h>
-#include <cyGL.h>
-
-//
-// trying this obj loader https://github.com/syoyo/tinyobjloader
-//
-#include "tiny_obj_loader.h"
-
-//
-// include image loader
-//
-#include "lodepng.h"
-
 #ifndef EXIT_SUCCESS
 # define EXIT_SUCCESS 0
 #endif
 #ifndef EXIT_FAILURE
 # define EXIT_FAILURE 1
 #endif
+
+// include ospray
+#include "ospray/ospray.h"
+#include "ospray/ospcommon/vec.h"
+
+// include cyCodeBase here
+#include <cyCore.h>
+#include <cyTimer.h>
+#include <cyPoint.h>
+#include <cyMatrix.h>
+#include <cyGL.h>
+
+// glm
+#include <glm/glm.hpp>
+
+// trying this obj loader https://github.com/syoyo/tinyobjloader
+#include "tiny_obj_loader.h"
+
+// include image loader
+#include "lodepng.h"
+
+// include cpp standard library
+#include <algorithm>
+#include <iostream>
+#include <limits>
+#include <string>
+#include <vector>
 
 #endif//_COMMON_H_
