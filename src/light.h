@@ -21,7 +21,11 @@ namespace otv {
     vec3f pos   = vec3f(0, 0, 2);
     vec3f up    = vec3f(0, 1, 0);
     vec3f dir = focus - pos;
+    // ospray data
+    OSPData lightsdata;
   public:
+    OSPData& GetOSPLights() { return lightsdata; }
+    void Clean() {}
     void Update();
     void Init(OSPRenderer renderer) {
       if (ospAmb != nullptr) { ospRelease(ospAmb); }
@@ -31,11 +35,8 @@ namespace otv {
       Update();
       // setup light data
       std::vector<OSPLight> lightslist = {ospAmb, ospDir};
-      OSPData lightsdata;
-      lightsdata = ospNewData(lightslist.size(), OSP_OBJECT, 
-			      lightslist.data());
+      lightsdata = ospNewData(lightslist.size(), OSP_OBJECT, lightslist.data());
       ospCommit(lightsdata);
-      ospSetData(renderer, "lights", lightsdata);
     }
   };
 };

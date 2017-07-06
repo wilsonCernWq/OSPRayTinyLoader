@@ -24,6 +24,9 @@ namespace otv
 
 namespace otv 
 {
+  void KeyboardAction(int key, int x, int y);
+  void MouseAction(int button, int state, int x, int y);
+
   void GetNormalKeys(unsigned char key, GLint x, GLint y);
   void GetSpecialKeys(int key, GLint x, GLint y);
   void GetMouseButton(GLint button, GLint state, GLint x, GLint y);

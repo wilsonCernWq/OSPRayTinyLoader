@@ -14,62 +14,67 @@ void render()
 
 void setupospray(const char* meshfile) 
 {
-  std::cout << "load mesh" << std::endl;
   // geometry/volume
   mesh.LoadFromFileObj(meshfile);
 
-  std::cout << "create ospray world" << std::endl;
   // world
   world.Init(false, ::otv::World::RENDERTYPE::PATHTRACER,
 	     mesh, mesh.GetCenter(),
 	     otv::mesh.GetDiagonalLength()/10.0f);
+  world.KeyboardAction = ::otv::KeyboardAction;
+  world.MouseAction = ::otv::MouseAction;
+}
+
+void printhelp()
+{
+  std::cout << "usage:" << std::endl
+	    << "./osploader <script-file>" << std::endl;
 }
 
 int main(int argc, const char **argv)
 {
-    //! check argument number
-    if (argc < 2) {
-	std::cerr << "The program needs at lease one input argument!"
-		  << std::endl;
-	exit(EXIT_FAILURE);
-    }
+  //! check argument number
+  if (argc < 2) {
+    std::cerr << "The program needs at lease one input argument!"
+	      << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-    //! initialize openGL
-    {
-	glutInit(&argc, const_cast<char**>(argv));
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(1024, 1024);
-	glutCreateWindow(argv[0]);
-	GLenum err = glewInit();
-	if (GLEW_OK != err) {
-	    std::cerr << "Error: Cannot Initialize GLEW " 
-		      << glewGetErrorString(err) << std::endl;
-	    return EXIT_FAILURE;
-	}
+  //! initialize openGL
+  {
+    glutInit(&argc, const_cast<char**>(argv));
+    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+    glutInitWindowPosition(0, 0);
+    glutInitWindowSize(1024, 1024);
+    glutCreateWindow(argv[0]);
+    GLenum err = glewInit();
+    if (GLEW_OK != err) {
+      std::cerr << "Error: Cannot Initialize GLEW " 
+		<< glewGetErrorString(err) << std::endl;
+      return EXIT_FAILURE;
     }
+  }
 
-    //! setting up ospray
-    {
-	ospInit(&argc, argv);
-	setupospray(argv[1]);
-    }
+  //! setting up ospray
+  {
+    ospInit(&argc, argv);
+    setupospray(argv[1]);
+  }
 
-    // execute the program
-    {
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-	glDisable(GL_DEPTH_TEST);
-	glutDisplayFunc(render);
-	glutIdleFunc(Idle);
-	glutMouseFunc(GetMouseButton);
-	glutMotionFunc(GetMousePosition);
-	glutKeyboardFunc(GetNormalKeys);
-	glutSpecialFunc(GetSpecialKeys);
-	glutInitContextFlags(GLUT_DEBUG);
-	glutMainLoop();
-    }
+  // execute the program
+  {
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+    glDisable(GL_DEPTH_TEST);
+    glutDisplayFunc(render);
+    glutIdleFunc(Idle);
+    glutMouseFunc(GetMouseButton);
+    glutMotionFunc(GetMousePosition);
+    glutKeyboardFunc(GetNormalKeys);
+    glutSpecialFunc(GetSpecialKeys);
+    glutInitContextFlags(GLUT_DEBUG);
+    glutMainLoop();
+  }
 
-    // exit
-    //world.Clean();
-    return EXIT_SUCCESS;
+  // exit
+  return EXIT_SUCCESS;
 }
