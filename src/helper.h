@@ -28,7 +28,8 @@ static inline const char* ErrorString(GLenum error) {
 static inline void _glCheckError(const char* file, int line, const char* comment) {
   GLenum error;
   while ((error = glGetError()) != GL_NO_ERROR) {
-    fprintf(stderr, "ERROR: %s (file %s, line %i: %s).\n", comment, file, line, ErrorString(error));
+    fprintf(stderr, "ERROR: %s (file %s, line %i: %s).\n",
+	    comment, file, line, ErrorString(error));
   }
 }
 
@@ -39,15 +40,14 @@ static inline void _glCheckError(const char* file, int line, const char* comment
 #endif
 
 #ifndef NDEBUG
-#define DEBUG_VECTOR(n, t)			\
+# define DEBUG_VECTOR(n, t)			\
   static void debug(const cy::Point##n##t& m) {	\
     std::cout << std::endl;			\
     for (int i = 0; i < n; ++i) {		\
       std::cout << "\t" << m[i];		\
     }						\
     std::cout << std::endl;			\
-  }
-#define DEBUG_MATRIX(n, t)				\
+  }                                             \
   static void debug(const cy::Matrix##n##t& m) {	\
     std::cout << std::endl;				\
     for (int i = 0; i < n; ++i) {			\
@@ -59,9 +59,28 @@ static inline void _glCheckError(const char* file, int line, const char* comment
     std::cout << std::endl;				\
   }
 #else
-#define DEBUG_VECTOR (n, t) static void debug(const cy::Point##n##t& m) {}
-#define DEBUG_MATRIX (n, t) static void debug(const cy::Matrix##n##t& m) {}
+# define DEBUG_VECTOR (n, t)                     \
+  static void debug(const cy::Point##n##t& m) {} \
+  static void debug(const cy::Matrix##n##t& m) {}
 #endif                                                     
+
+#define CAST_VECTOR(n, t)						\
+  static ospcommon::vec##n##t make_vec(const cy::Point##n##t& m) {	\
+    ospcommon::vec##n##t v;						\
+    for (int i = 0; i < n; ++i) {					\
+      v[i] = m[i];							\
+    }									\
+    return v;								\
+  }
+
+#define DEFINE_MATH_TYPES(type, t) \
+  typedef glm::tvec2<type> vec2##t;   \
+  typedef glm::tvec3<type> vec3##t;   \
+  typedef glm::tvec4<type> vec4##t;   \
+  typedef glm::tmat2x2<type> mat2##t; \
+  typedef glm::tmat3x3<type> mat3##t; \
+  typedef glm::tmat4x4<type> mat4##t; 
+
 
 namespace cy {
   typedef Point2<int> Point2i;
@@ -88,32 +107,8 @@ namespace otv
   DEBUG_VECTOR(2,i);
   DEBUG_VECTOR(3,i);
   DEBUG_VECTOR(4,i);
-
-  DEBUG_MATRIX(2,f);
-  DEBUG_MATRIX(3,f);
-  DEBUG_MATRIX(4,f);
-  DEBUG_MATRIX(2,i);
-  DEBUG_MATRIX(3,i);
-  DEBUG_MATRIX(4,i);
 };
 
-#define CAST_VECTOR(n, t)						\
-  static ospcommon::vec##n##t make_vec(const cy::Point##n##t& m) {	\
-    ospcommon::vec##n##t v;						\
-    for (int i = 0; i < n; ++i) {					\
-      v[i] = m[i];							\
-    }									\
-    return v;								\
-  }
-
-#define DEFINE_MATH_TYPES(type, t) \
-  typedef glm::tvec2<type> vec2##t;   \
-  typedef glm::tvec3<type> vec3##t;   \
-  typedef glm::tvec4<type> vec4##t;   \
-  typedef glm::tmat2x2<type> mat2##t; \
-  typedef glm::tmat3x3<type> mat3##t; \
-  typedef glm::tmat4x4<type> mat4##t; 
-  
 namespace otv 
 {
   CAST_VECTOR(2,i);

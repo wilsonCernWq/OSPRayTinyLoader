@@ -10,34 +10,35 @@ namespace otv {
 
   class Light : public Trackball {
   private:
-    float Iamb = 0.5f;
-    float Idir = 2.00f;
     // lights
     OSPLight ospAmb = nullptr;
     OSPLight ospDir = nullptr;
     OSPLight ospSun = nullptr;
-    float zoom = 1.0f;
-    vec3f focus = vec3f(0, 0, 0);
-    vec3f pos   = vec3f(0, 0, 2);
-    vec3f up    = vec3f(0, 1, 0);
-    vec3f dir = focus - pos;
+    // light data
+    float Iamb;
+    float Idir;
+    float Isun;
+    vec3f Camb;
+    vec3f Cdir;
+    vec3f Csun;
+    OrbitalPoint ptDir;
+    OrbitalPoint ptSun;
     // ospray data
-    OSPData lightsdata;
+    OSPData osplights = nullptr;
   public:
-    OSPData& GetOSPLights() { return lightsdata; }
-    void Clean() {}
-    void Update();
-    void Init(OSPRenderer renderer) {
-      if (ospAmb != nullptr) { ospRelease(ospAmb); }
-      ospAmb = ospNewLight(renderer, "AmbientLight");
-      if (ospDir != nullptr) { ospRelease(ospDir); }
-      ospDir = ospNewLight(renderer, "DirectionalLight");
-      Update();
-      // setup light data
-      std::vector<OSPLight> lightslist = {ospAmb, ospDir};
-      lightsdata = ospNewData(lightslist.size(), OSP_OBJECT, lightslist.data());
-      ospCommit(lightsdata);
+    Light ();
+    ~Light () = default;
+    OSPData& GetOSPLights() { return osplights; }
+    OrbitalPoint& GetDirLight() { return ptDir; }
+    OrbitalPoint& GetSunLight() { return ptSun; }
+    void Clean() {
+      if (osplights != nullptr) { ospRelease(osplights); osplights = nullptr; }
+      if (ospAmb != nullptr) { ospRelease(ospAmb); ospAmb = nullptr; }
+      if (ospDir != nullptr) { ospRelease(ospDir); ospDir = nullptr; }
+      if (ospSun != nullptr) { ospRelease(ospSun); ospSun = nullptr; }
     }
+    void Update();
+    void Init(OSPRenderer renderer);
   };
 };
 

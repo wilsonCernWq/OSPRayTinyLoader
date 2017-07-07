@@ -40,7 +40,7 @@ void ::otv::MouseAction(int button, int state, int x, int y) {
       world.GetCamera().BeginDrag(p[0], p[1]);	
     } 
     else if (button == GLUT_RIGHT_BUTTON) {
-      world.GetLight().BeginDrag(p[0], p[1]);	
+      world.GetLight().GetDirLight().BeginDrag(p[0], p[1]);	
     }
   }
   else {
@@ -49,7 +49,7 @@ void ::otv::MouseAction(int button, int state, int x, int y) {
       world.GetCamera().Update(&world.GetFrameBuffer());	
     } 
     else if (button == GLUT_RIGHT_BUTTON) {
-      world.GetLight().Drag(p[0], p[1]);
+      world.GetLight().GetDirLight().Drag(p[0], p[1]);
       world.GetLight().Update();
       world.GetCamera().Update(&world.GetFrameBuffer());	
     }
