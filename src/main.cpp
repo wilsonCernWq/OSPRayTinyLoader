@@ -11,7 +11,7 @@ void renderstart
   // geometry/volume
   mesh.LoadFromFileObj(meshFiles[0].c_str());
   // world
-  world.Init(::otv::World::RENDERTYPE::PATHTRACER,
+  world.Init(vec2i(1024,1024), otv::World::RENDERTYPE::PATHTRACER,
 	     mesh, mesh.GetCenter(),
 	     otv::mesh.GetDiagonalLength()/10.0f);
   world.Start();

@@ -26,7 +26,7 @@ namespace otv {
     OSPData osplights = nullptr;
   public:
     Light ();
-    ~Light () = default;
+    ~Light () { Clean(); }
     OSPData& GetOSPLights() { return osplights; }
     OrbitalPoint& GetDirLight() { return ptDir; }
     OrbitalPoint& GetSunLight() { return ptSun; }
