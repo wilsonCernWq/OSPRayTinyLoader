@@ -2,9 +2,8 @@
 #ifndef _LIGHT_H_
 #define _LIGHT_H_
 
-#include "common.h"
-#include "helper.h"
-#include "trackball.h"
+#include "common/helper.h"
+#include "common/trackball.h"
 
 namespace otv {
 

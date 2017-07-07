@@ -1,7 +1,3 @@
-/**
- * This file defines all helper functions.
- * Those functions shouldn't depend on any thing in this project
- */
 #pragma once
 #ifndef _GLUT_BINDING_H_
 #define _GLUT_BINDING_H_
@@ -33,7 +29,7 @@
 # define EXIT_FAILURE 1
 #endif
 
-#include "../global.h"
+#include "global.h"
 
 //! @name error check helper from EPFL ICG class
 static inline const char* ErrorString(GLenum error) {
@@ -78,13 +74,8 @@ namespace otv
   void OpenGLCreateSystem(int argc, const char **argv);
   void OpenGLStartSystem();
   void OpenGLRender();
-  inline void Init() {
-    world.KeyboardAction = KeyboardAction;
-    world.MouseAction = MouseAction;
-    world.OpenGLCreateSystem = OpenGLCreateSystem;
-    world.OpenGLStartSystem = OpenGLStartSystem;
-  }
-  inline void Idle() { glutPostRedisplay(); }
+  void Init();
+  void Idle();
 
 };
 

@@ -1,11 +1,14 @@
 #include "glut_binding.h"
 #include <cyGL.h>
 
+// parameters
+static unsigned int WINX = 0, WINY = 0;
+static otv::vec2i   WINSIZE = otv::vec2i(1024, 1024);
 static cyGLRenderBuffer2D gfb;
 static int mousebutton = -1; // GLUT_LEFT_BUTTON GLUT_RIGHT_BUTTON GLUT_MIDDLE_BUTTON
 static int mousestate  = GLUT_UP; // GLUT_UP GLUT_DOWN
 
-void ::otv::KeyboardAction(int key, int x, int y)
+void otv::KeyboardAction(int key, int x, int y)
 {
   switch (key) {
   case 27:
@@ -27,9 +30,9 @@ void ::otv::KeyboardAction(int key, int x, int y)
   }
 }
 
-void ::otv::MouseAction(int button, int state, int x, int y) {
-  static cy::Point2f p;
-  ::otv::mouse2screen(x, y, world.GetWinSizeX(), world.GetWinSizeY(), p);
+void otv::MouseAction(int button, int state, int x, int y) {
+  static cyPoint2f p;
+  otv::mouse2screen(x, y, world.GetWinSizeX(), world.GetWinSizeY(), p);
   if (state == GLUT_UP) {
     if (button == GLUT_LEFT_BUTTON) {
       world.GetCamera().BeginDrag(p[0], p[1]);	
@@ -51,25 +54,27 @@ void ::otv::MouseAction(int button, int state, int x, int y) {
   }
 }
 
-void ::otv::GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
+void otv::GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
   world.MouseAction(button, mousestate, x, y);
   mousebutton = button;
   mousestate = state;
 }
 
-void ::otv::GetMousePosition(GLint x, GLint y) {
+void otv::GetMousePosition(GLint x, GLint y) {
   world.MouseAction(mousebutton, mousestate, x, y);
 }
 
-void ::otv::GetNormalKeys(unsigned char key, GLint x, GLint y) {
+void otv::GetNormalKeys(unsigned char key, GLint x, GLint y) {
   world.KeyboardAction((int) key, x, y);
 }
 
-void ::otv::GetSpecialKeys(int key, GLint x, GLint y) {
+void otv::GetSpecialKeys(int key, GLint x, GLint y) {
   world.KeyboardAction(key, x, y);
 }
 
-void ::otv::OpenGLCreateSystem(int argc, const char **argv) {
+void otv::Idle() { glutPostRedisplay(); }
+
+void otv::OpenGLCreateSystem(int argc, const char **argv) {
   if (!NOWIN_FLAG) {
     //! initialize openGL    
     glutInit(&argc, const_cast<char**>(argv));
@@ -86,7 +91,7 @@ void ::otv::OpenGLCreateSystem(int argc, const char **argv) {
   }
 }
 
-void ::otv::OpenGLStartSystem()
+void otv::OpenGLStartSystem()
 {
   if (!NOWIN_FLAG) {
     
@@ -105,7 +110,7 @@ void ::otv::OpenGLStartSystem()
   }
 }
 
-void ::otv::OpenGLRender()
+void otv::OpenGLRender()
 {
   if (!NOWIN_FLAG) {
     world.GetFrameBuffer().RenderOSPRay();
@@ -121,4 +126,11 @@ void ::otv::OpenGLRender()
 		      GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glutSwapBuffers();
   }
+}
+
+void otv::Init() {
+  world.KeyboardAction = KeyboardAction;
+  world.MouseAction = MouseAction;
+  world.OpenGLCreateSystem = OpenGLCreateSystem;
+  world.OpenGLStartSystem = OpenGLStartSystem;
 }

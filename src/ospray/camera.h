@@ -2,9 +2,8 @@
 #ifndef _CAMERA_H_
 #define _CAMERA_H_
 
-#include "common.h"
-#include "helper.h"
-#include "trackball.h"
+#include "common/helper.h"
+#include "common/trackball.h"
 #include "framebuffer.h"
 
 namespace otv {

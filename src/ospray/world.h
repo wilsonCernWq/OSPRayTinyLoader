@@ -2,12 +2,12 @@
 #ifndef _WORLD_H_
 #define _WORLD_H_
 
-#include "common.h"
-#include "helper.h"
+#include "common/helper.h"
+#include "loader/meshwrapper.h"
+
 #include "light.h"
 #include "camera.h"
 #include "framebuffer.h"
-#include "meshwrapper.h"
 
 namespace otv 
 {
@@ -113,12 +113,7 @@ namespace otv
       framebuffer.Init(this->WINSIZE, this->osprenderer);
       ospCommit(this->osprenderer);
     }
-    
-    void (*KeyboardAction)(int key, int x, int y);
-    void (*MouseAction)(int button, int state, int x, int y);
-    void (*OpenGLCreateSystem)(int argc, const char **argv);
-    void (*OpenGLStartSystem)();
-    
+        
     void Create(int argc, const char **argv) {
       // initialize openGL
       OpenGLCreateSystem(argc, argv);
@@ -129,6 +124,12 @@ namespace otv
       OpenGLStartSystem();      
     }    
     void Clean();
+
+    void (*KeyboardAction)(int key, int x, int y);
+    void (*MouseAction)(int button, int state, int x, int y);
+    void (*OpenGLCreateSystem)(int argc, const char **argv);
+    void (*OpenGLStartSystem)();
+
   };
 };
 

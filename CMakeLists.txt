@@ -19,6 +19,9 @@ endif()
 # load required libraries
 include(cmake/common.cmake)
 #
+#
+include_directories("src")
+#
 # install dlls or shader
 file(GLOB_RECURSE SHADERS "src/*.glsl")
 set(COPYLIST ${COMMON_DLLS} ${SHADERS})
@@ -30,13 +33,29 @@ endif()
 #
 # include sources
 file(GLOB_RECURSE MAIN "src/main.cpp")
-file(GLOB_RECURSE CXX "src/*.cpp")
-file(GLOB_RECURSE HXX "src/*.h")
-list(REMOVE_ITEM CXX ${MAIN})
-add_library(osphelper SHARED ${CXX} ${HXX} ${SHADERS})
-target_link_libraries(osphelper ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
-add_executable(osploader ${MAIN})
-target_link_libraries(osploader osphelper ${OSPRAY_LIBRARIES})
-#
-# compile ospray apps
-#add_subdirectory(ospray/apps)
+file(GLOB_RECURSE CXX   "src/*.cpp")
+file(GLOB_RECURSE COMMON_CXX "src/common/*.cpp")
+file(GLOB_RECURSE LOADER_CXX "src/loader/*.cpp")
+file(GLOB_RECURSE OPENGL_CXX "src/opengl/*.cpp")
+file(GLOB_RECURSE OSPRAY_CXX "src/ospray/*.cpp")
+foreach(f ${MAIN} ${COMMON_CXX} ${LOADER_CXX} ${OPENGL_CXX} ${OSPRAY_CXX})
+  list(REMOVE_ITEM CXX ${f})
+endforeach()
+
+add_library(osp_common SHARED ${COMMON_CXX})
+target_link_libraries(osp_common ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
+
+add_library(osp_loader SHARED ${LOADER_CXX})
+target_link_libraries(osp_loader osp_common)
+
+add_library(osp_opengl SHARED ${OPENGL_CXX})
+target_link_libraries(osp_opengl osp_common)
+
+add_library(osp_ospray SHARED ${OSPRAY_CXX})
+target_link_libraries(osp_ospray osp_common)
+
+add_library(osp_glob SHARED ${CXX})
+target_link_libraries(osp_glob osp_common osp_loader osp_opengl osp_ospray)
+
+add_executable(loader ${MAIN})
+target_link_libraries(loader osp_glob)

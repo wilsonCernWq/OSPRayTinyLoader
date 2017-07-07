@@ -2,11 +2,9 @@
 #ifndef _GLOBAL_H_
 #define _GLOBAL_H_
 
-#include "common.h"
-#include "helper.h"
-
-#include "world.h"
-#include "meshwrapper.h"
+#include "common/helper.h"
+#include "loader/meshwrapper.h"
+#include "ospray/world.h"
 
 // Global Variables
 namespace otv 

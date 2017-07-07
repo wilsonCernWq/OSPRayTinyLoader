@@ -1,7 +1,5 @@
-#include "common.h"
-#include "helper.h"
 #include "global.h"
-#include "bindings/glut_binding.h"
+#include "opengl/glut_binding.h"
 
 using namespace otv;
 
