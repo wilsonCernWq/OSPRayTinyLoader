@@ -6,23 +6,15 @@
 
 using namespace otv;
 
-void render()
-{
-  // render
-  world.GetFrameBuffer().RenderOpenGL();
-}
-
-void setupospray(const char* meshfile) 
+void renderstart(const char* meshfile) 
 {
   // geometry/volume
   mesh.LoadFromFileObj(meshfile);
-
   // world
   world.Init(false, ::otv::World::RENDERTYPE::PATHTRACER,
 	     mesh, mesh.GetCenter(),
 	     otv::mesh.GetDiagonalLength()/10.0f);
-  world.KeyboardAction = ::otv::KeyboardAction;
-  world.MouseAction = ::otv::MouseAction;
+  world.Start();
 }
 
 void printhelp()
@@ -40,41 +32,16 @@ int main(int argc, const char **argv)
     exit(EXIT_FAILURE);
   }
 
-  //! initialize openGL
-  {
-    glutInit(&argc, const_cast<char**>(argv));
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(0, 0);
-    glutInitWindowSize(1024, 1024);
-    glutCreateWindow(argv[0]);
-    GLenum err = glewInit();
-    if (GLEW_OK != err) {
-      std::cerr << "Error: Cannot Initialize GLEW " 
-		<< glewGetErrorString(err) << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-
-  //! setting up ospray
-  {
-    ospInit(&argc, argv);
-    setupospray(argv[1]);
-  }
-
-  // execute the program
-  {
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-    glDisable(GL_DEPTH_TEST);
-    glutDisplayFunc(render);
-    glutIdleFunc(Idle);
-    glutMouseFunc(GetMouseButton);
-    glutMotionFunc(GetMousePosition);
-    glutKeyboardFunc(GetNormalKeys);
-    glutSpecialFunc(GetSpecialKeys);
-    glutInitContextFlags(GLUT_DEBUG);
-    glutMainLoop();
-  }
-
+  // call function
+  world.KeyboardAction = ::otv::KeyboardAction;
+  world.MouseAction = ::otv::MouseAction;
+  world.OpenGLCreateSystem = ::otv::OpenGLCreateSystem;
+  world.OpenGLStartSystem = ::otv::OpenGLStartSystem;
+  world.OpenGLRender = ::otv::OpenGLRender;
+  world.CreateSystem(argc, argv);
+  
+  renderstart(argv[1]);
+  
   // exit
   return EXIT_SUCCESS;
 }

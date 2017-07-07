@@ -61,7 +61,8 @@ namespace otv
 	ospSet1f(this->osprenderer, "aoDistance", 1e20);
 	ospSet1i(this->osprenderer, "aoTransparencyEnabled", 1);
 	ospSet1i(this->osprenderer, "oneSidedLighting", 0);
-	ospSetVec4f(this->osprenderer, "bgColor", osp::vec4f{0.0f, 0.0f, 0.0f, 0.0f});
+	ospSetVec4f(this->osprenderer, "bgColor",
+		    osp::vec4f{0.0f, 0.0f, 0.0f, 0.0f});
 	ospSetObject(this->osprenderer, "maxDepthTexture", NULL);
       }
       else if (renderType == PATHTRACER) {
@@ -89,6 +90,7 @@ namespace otv
     void Init(bool nowin, RENDERTYPE renderType, otv::Mesh& mesh,
 	      vec3f cameraCenter, float cameraZoom)
     {
+      NOWIN = nowin;
       // create world & renderer
       CreateModel();
       CreateRenderer(renderType);
@@ -115,10 +117,27 @@ namespace otv
       framebuffer.Init(this->WINSIZE, nowin, this->osprenderer);
       ospCommit(this->osprenderer);
     }
+    
     void (*KeyboardAction)(int key, int x, int y);
     void (*MouseAction)(int button, int state, int x, int y);
+    void (*OpenGLCreateSystem)(int argc, const char **argv);
+    void (*OpenGLStartSystem)();
+    void (*OpenGLRender)();
+    
+    void CreateSystem(int argc, const char **argv) {
+      //! initialize openGL
+      OpenGLCreateSystem(argc, argv);
+      //! setting up ospray    
+      ospInit(&argc, argv);
+    }
+    void Start() {
+      if (!NOWIN) {
+	// execute the program
+	glutDisplayFunc(OpenGLRender);
+	OpenGLStartSystem();
+      }
+    }    
     void Clean();
-  
   };
 };
 
