@@ -8,37 +8,6 @@
 
 #include "common.h"
 
-//! @name error check helper from EPFL ICG class
-static inline const char* ErrorString(GLenum error) {
-  const char* msg;
-  switch (error) {
-#define Case(Token)  case Token: msg = #Token; break;
-    Case(GL_INVALID_ENUM);
-    Case(GL_INVALID_VALUE);
-    Case(GL_INVALID_OPERATION);
-    Case(GL_INVALID_FRAMEBUFFER_OPERATION);
-    Case(GL_NO_ERROR);
-    Case(GL_OUT_OF_MEMORY);
-#undef Case
-  }
-  return msg;
-}
-
-//! @name check error
-static inline void _glCheckError(const char* file, int line, const char* comment) {
-  GLenum error;
-  while ((error = glGetError()) != GL_NO_ERROR) {
-    fprintf(stderr, "ERROR: %s (file %s, line %i: %s).\n",
-	    comment, file, line, ErrorString(error));
-  }
-}
-
-#ifndef NDEBUG
-# define check_error_gl(x) _glCheckError(FILE, LINE, x)
-#else
-# define check_error_gl() ((void)0)
-#endif
-
 #ifndef NDEBUG
 # define DEBUG_VECTOR(n, t)			\
   static void debug(const cy::Point##n##t& m) {	\

@@ -16,10 +16,6 @@ namespace otv
     enum RENDERTYPE {SCIVIS, PATHTRACER};
     
   private:
-    // control flags
-    bool NOWIN = false;
-    int mousebutton = -1;
-    
     // parameters
     unsigned int WINX = 0, WINY = 0;
     vec2i WINSIZE = vec2i(1024, 1024);
@@ -87,10 +83,9 @@ namespace otv
       ospSet1f(this->osprenderer, "varianceThreshold", 0.0f);
       ospCommit(this->osprenderer);
     }
-    void Init(bool nowin, RENDERTYPE renderType, otv::Mesh& mesh,
+    void Init(RENDERTYPE renderType, otv::Mesh& mesh,
 	      vec3f cameraCenter, float cameraZoom)
     {
-      NOWIN = nowin;
       // create world & renderer
       CreateModel();
       CreateRenderer(renderType);
@@ -100,6 +95,7 @@ namespace otv
       ospCommit(this->ospmodel);
 
       // camera
+      // TODO need to impove here
       this->camera.SetFocus(cameraCenter);
       this->camera.SetZoom(cameraZoom);     
       this->camera.Init(this->WINSIZE);
@@ -114,7 +110,7 @@ namespace otv
       ospCommit(this->osprenderer);
 
       // framebuffer
-      framebuffer.Init(this->WINSIZE, nowin, this->osprenderer);
+      framebuffer.Init(this->WINSIZE, this->osprenderer);
       ospCommit(this->osprenderer);
     }
     
@@ -122,20 +118,15 @@ namespace otv
     void (*MouseAction)(int button, int state, int x, int y);
     void (*OpenGLCreateSystem)(int argc, const char **argv);
     void (*OpenGLStartSystem)();
-    void (*OpenGLRender)();
     
-    void CreateSystem(int argc, const char **argv) {
-      //! initialize openGL
+    void Create(int argc, const char **argv) {
+      // initialize openGL
       OpenGLCreateSystem(argc, argv);
-      //! setting up ospray    
+      // setting up ospray    
       ospInit(&argc, argv);
     }
     void Start() {
-      if (!NOWIN) {
-	// execute the program
-	glutDisplayFunc(OpenGLRender);
-	OpenGLStartSystem();
-      }
+      OpenGLStartSystem();      
     }    
     void Clean();
   };

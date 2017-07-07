@@ -1,17 +1,19 @@
 #include "common.h"
 #include "helper.h"
-#include "trackball.h"
-#include "meshwrapper.h"
-#include "callbacks.h"
+#include "global.h"
+#include "bindings/glut_binding.h"
 
 using namespace otv;
 
-void renderstart(const char* meshfile) 
+void renderstart
+(std::vector<std::string> meshFiles,
+ std::string background,
+ bool noWindowMode) 
 {
   // geometry/volume
-  mesh.LoadFromFileObj(meshfile);
+  mesh.LoadFromFileObj(meshFiles[0].c_str());
   // world
-  world.Init(false, ::otv::World::RENDERTYPE::PATHTRACER,
+  world.Init(::otv::World::RENDERTYPE::PATHTRACER,
 	     mesh, mesh.GetCenter(),
 	     otv::mesh.GetDiagonalLength()/10.0f);
   world.Start();
@@ -25,22 +27,21 @@ void printhelp()
 
 int main(int argc, const char **argv)
 {
-  //! check argument number
-  if (argc < 2) {
-    std::cerr << "The program needs at lease one input argument!"
-	      << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  // //! check argument number
+  // if (argc < 2) {
+  //   std::cerr << "The program needs at lease one input argument!"
+  // 	      << std::endl;
+  //   exit(EXIT_FAILURE);
+  // }
 
-  // call function
-  world.KeyboardAction = ::otv::KeyboardAction;
-  world.MouseAction = ::otv::MouseAction;
-  world.OpenGLCreateSystem = ::otv::OpenGLCreateSystem;
-  world.OpenGLStartSystem = ::otv::OpenGLStartSystem;
-  world.OpenGLRender = ::otv::OpenGLRender;
-  world.CreateSystem(argc, argv);
+  std::vector<std::string> list = {
+    "/home/qwu/work/im2weight/model/wooddoll/wooddoll_00.obj"
+  };
   
-  renderstart(argv[1]);
+  // call function
+  otv::Init();
+  world.Create(argc, argv);
+  renderstart(list, "", false);
   
   // exit
   return EXIT_SUCCESS;

@@ -6,33 +6,6 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include <GL/glew.h>
-#ifdef APPLE // apple specific header
-# include <OpenGL/gl.h>
-# include <OpenGL/glu.h>
-# include <GLUT/glut.h>
-#else // Windows need special header
-# if defined(WIN32) || defined(_WIN32) || defined(WIN32) && !defined(CYGWIN)
-#  define NOMINMAX
-#  include <Windows.h>
-# else
-#  if unix // Linux needs extensions for framebuffers
-#   define GL_GLEXT_PROTOTYPES 1
-#   include <GL/glext.h>
-#  endif
-# endif
-# include <GL/gl.h>
-# include <GL/glu.h>
-# include <GL/glut.h>
-# include <GL/freeglut.h>
-#endif
-#ifndef EXIT_SUCCESS
-# define EXIT_SUCCESS 0
-#endif
-#ifndef EXIT_FAILURE
-# define EXIT_FAILURE 1
-#endif
-
 // include ospray
 #include "ospray/ospray.h"
 #include "ospray/ospcommon/vec.h"
@@ -42,7 +15,7 @@
 #include <cyTimer.h>
 #include <cyPoint.h>
 #include <cyMatrix.h>
-#include <cyGL.h>
+//#include <cyGL.h>
 
 // glm
 #include <glm/glm.hpp>

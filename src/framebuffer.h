@@ -10,29 +10,23 @@ namespace otv {
   class FrameBuffer {
   private:
     // flags and parameters
-    bool nowin;
     vec2i size;
+    OSPRenderer ren; // reference to global renderer
     // framebuffers
-    OSPFrameBuffer     fb = nullptr;
-    uint32_t*          ofb;
-    cyGLRenderBuffer2D gfb;
-    // reference to global renderer
-    OSPRenderer ren;
+    OSPFrameBuffer fb = nullptr;
+    uint32_t*      ofb = nullptr;
   public:
-    FrameBuffer() {}
+    FrameBuffer() = default;
     ~FrameBuffer() { Clean(); };
 
     OSPFrameBuffer& GetOSPFrameBuffer() { return fb; }
-    void ClearFrameBuffer() {
-      ospFrameBufferClear(fb, OSP_FB_COLOR | OSP_FB_ACCUM);
-    }
+    uint32_t*       GetMAPFrameBuffer() { return ofb; }
     
     void Resize(const vec2i& winsize);
-    void Init(const vec2i& winsize, bool nowin, OSPRenderer renderer);
-    
+    void Init(const vec2i& winsize, OSPRenderer renderer);
     void RenderOSPRay();
-    void RenderOpenGL();
     void Clean();
+    void Clear() { ospFrameBufferClear(fb, OSP_FB_COLOR | OSP_FB_ACCUM); }
   };
 };
 

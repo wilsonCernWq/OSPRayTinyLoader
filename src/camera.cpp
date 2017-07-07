@@ -11,6 +11,6 @@ void otv::Camera::Update(FrameBuffer* framebuffer)
   ospSetVec3f(this->ospCam, "up",  (osp::vec3f&)currCamUp);
   ospCommit(this->ospCam);
   if (framebuffer != nullptr) {
-    framebuffer->ClearFrameBuffer();
+    framebuffer->Clear();
   }
 }
