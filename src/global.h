@@ -12,8 +12,12 @@ namespace otv
   // objects
   extern World world;  
   extern Mesh mesh;
-  // flags
+  // flags 
   extern bool NOWIN_FLAG;
+  // parameters
+  extern int   WINX, WINY;
+  extern vec2i WINSIZE;
+
 };
 
 #endif//_GLOBAL_H_

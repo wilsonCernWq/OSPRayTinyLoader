@@ -5,8 +5,7 @@ using namespace otv;
 
 void renderstart
 (std::vector<std::string> meshFiles,
- std::string background,
- bool noWindowMode) 
+ std::string background)
 {
   // geometry/volume
   mesh.LoadFromFileObj(meshFiles[0].c_str());
@@ -19,27 +18,44 @@ void renderstart
 
 void printhelp()
 {
-  std::cout << "usage:" << std::endl
-	    << "./osploader <script-file>" << std::endl;
+  std::cout << "USAGE:" << std::endl
+	    << "  loader <options>" << std::endl
+    	    << "OPTIONS" << std::endl
+	    << "  -nw, -nowin\tNo window mode" << std::endl
+    	    << "  -s <script>\tLoad a script file" << std::endl
+	    << std::endl;
+}
+
+void parsecmd(int argc, const char **argv)
+{
+  std::string option;
+  for (int i = 1; i < argc; ++i) {
+    option = std::string(argv[i]);
+    if (option.compare("-nowin") == 0 ||
+	option.compare("-nw") == 0) {
+      std::cout << "#otv: no window mode" << std::endl;
+      otv::NOWIN_FLAG = true;
+    }
+  }
 }
 
 int main(int argc, const char **argv)
 {
-  // //! check argument number
-  // if (argc < 2) {
-  //   std::cerr << "The program needs at lease one input argument!"
-  // 	      << std::endl;
-  //   exit(EXIT_FAILURE);
-  // }
-
-  std::vector<std::string> list = {
-    "/home/qwu/work/im2weight/model/wooddoll/wooddoll_00.obj"
-  };
+  //! check argument number
+  if (argc < 2) {
+    std::cerr << "Error: The program needs at lease one input argument!"
+  	      << std::endl;
+    printhelp();
+    exit(EXIT_FAILURE);
+  }
+  parsecmd(argc, argv);
+  
+  std::vector<std::string> list = { std::string(argv[1]) };
   
   // call function
   otv::Init();
   world.Create(argc, argv);
-  renderstart(list, "", false);
+  renderstart(list, "");
   
   // exit
   return EXIT_SUCCESS;

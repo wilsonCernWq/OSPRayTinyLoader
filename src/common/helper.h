@@ -42,14 +42,16 @@
     return v;								\
   }
 
-#define DEFINE_MATH_TYPES(type, t) \
+#define DEFINE_MATH_TYPES(type, t)    \
   typedef glm::tvec2<type> vec2##t;   \
   typedef glm::tvec3<type> vec3##t;   \
   typedef glm::tvec4<type> vec4##t;   \
   typedef glm::tmat2x2<type> mat2##t; \
   typedef glm::tmat3x3<type> mat3##t; \
-  typedef glm::tmat4x4<type> mat4##t; 
-
+  typedef glm::tmat4x4<type> mat4##t; \
+  struct bbox2##t { vec2##t upper, lower; }; \
+  struct bbox3##t { vec3##t upper, lower; }; \
+  struct bbox4##t { vec4##t upper, lower; }; 
 
 namespace cy {
   typedef Point2<int> Point2i;
@@ -98,8 +100,8 @@ namespace otv
     std::vector<unsigned char> data;
     unsigned int width = 0, height = 0;
     unsigned int channel = 0;
-    bool IsEmpty() { return (width * height <= 0); }
-    cy::Point2<int> Size() { return cy::Point2<int>(width, height); }
+    bool IsEmpty() { return (width * height) <= 0; }
+    vec2i Size() { return vec2i(width, height); }
   };
 
   //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]

@@ -2,8 +2,6 @@
 #include <cyGL.h>
 
 // parameters
-static unsigned int WINX = 0, WINY = 0;
-static otv::vec2i   WINSIZE = otv::vec2i(1024, 1024);
 static cyGLRenderBuffer2D gfb;
 static int mousebutton = -1; // GLUT_LEFT_BUTTON GLUT_RIGHT_BUTTON GLUT_MIDDLE_BUTTON
 static int mousestate  = GLUT_UP; // GLUT_UP GLUT_DOWN
@@ -12,8 +10,8 @@ void otv::KeyboardAction(int key, int x, int y)
 {
   switch (key) {
   case 27:
-    if (!NOWIN_FLAG) {
-      NOWIN_FLAG = true;
+    if (!otv::NOWIN_FLAG) {
+      otv::NOWIN_FLAG = true;
       world.Clean();
       gfb.Delete();
     }
@@ -36,7 +34,7 @@ void otv::KeyboardAction(int key, int x, int y)
 
 void otv::MouseAction(int button, int state, int x, int y) {
   static cyPoint2f p;
-  otv::mouse2screen(x, y, WINSIZE.x, WINSIZE.y, p);
+  otv::mouse2screen(x, y, otv::WINSIZE.x, otv::WINSIZE.y, p);
   if (state == GLUT_UP) {
     if (button == GLUT_LEFT_BUTTON) {
       world.GetCamera().BeginDrag(p[0], p[1]);	
@@ -79,12 +77,12 @@ void otv::GetSpecialKeys(int key, GLint x, GLint y) {
 void otv::Idle() { glutPostRedisplay(); }
 
 void otv::OpenGLCreateSystem(int argc, const char **argv) {
-  if (!NOWIN_FLAG) {
+  if (!otv::NOWIN_FLAG) {
     //! initialize openGL    
     glutInit(&argc, const_cast<char**>(argv));
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(WINX, WINY);
-    glutInitWindowSize(WINSIZE.x, WINSIZE.y);
+    glutInitWindowPosition(otv::WINX, otv::WINY);
+    glutInitWindowSize(otv::WINSIZE.x, otv::WINSIZE.y);
     glutCreateWindow(argv[0]);
     GLenum err = glewInit();
     if (GLEW_OK != err) {
@@ -99,7 +97,7 @@ void otv::OpenGLStartSystem()
 {
   if (!NOWIN_FLAG) {
     
-    gfb.Initialize(true, 4, WINSIZE.x, WINSIZE.y);
+    gfb.Initialize(true, 4, otv::WINSIZE.x, otv::WINSIZE.y);
     
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
     glDisable(GL_DEPTH_TEST);
@@ -120,12 +118,12 @@ void otv::OpenGLRender()
     world.Render();
     // put framebuffer to screen
     gfb.BindTexture();
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WINSIZE.x, WINSIZE.y, 
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		    GL_RGBA, GL_UNSIGNED_BYTE,
 		    world.GetImageData());
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
-    glBlitFramebuffer(0, 0, WINSIZE.x, WINSIZE.y, 
-		      0, 0, WINSIZE.x, WINSIZE.y, 
+    glBlitFramebuffer(0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
+		      0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		      GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glutSwapBuffers();
   }
