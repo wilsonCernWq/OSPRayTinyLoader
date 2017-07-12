@@ -26,7 +26,8 @@ namespace otv {
     ImageData map_Ns;
     ImageData map_d;
     ImageData map_Bump;
-    void LoadMtl(const tinyobj::material_t& tinymtl, std::string& dirpath) {
+    void LoadMtl(const tinyobj::material_t& tinymtl, std::string& dirpath)
+    {
       // load constants
       Kd = vec3f(tinymtl.diffuse[0],
 		 tinymtl.diffuse[1],
@@ -55,11 +56,16 @@ namespace otv {
     std::string SplitPath(const std::string& str)
       {
 	size_t i = str.find_last_of("/\\");
-	if (i != std::string::npos) { return str.substr(0, i + 1); }
-	else { return std::string(""); }
+	if (i != std::string::npos) {
+	  return str.substr(0, i + 1);
+	}
+	else {
+	  return std::string("");
+	}
       }
   public:
-    struct TinyObjLoader {
+    struct TinyObjLoader
+    {
       std::string                      err;
       tinyobj::attrib_t                attributes; // attributes
       std::vector<tinyobj::shape_t>    shapes; // shapes
@@ -80,14 +86,17 @@ namespace otv {
     std::vector<Geometry> geometries;
   public:
     /** \brief Accessors */
-    const char* DirPath() {
+    const char* DirPath()
+    {
       return dirpath == "" ? nullptr : dirpath.c_str();
     }
-    cyPoint3f GetMaterial(unsigned int i, std::string str);
-    vec3f GetBBoxMax() {
+    // cyPoint3f GetMaterial(unsigned int i, std::string str);
+    vec3f GetBBoxMax()
+    {
       return bbox.upper;
     }
-    vec3f GetBBoxMin() {
+    vec3f GetBBoxMin()
+    {
       return bbox.lower;
     }
     vec3f GetCenter() 

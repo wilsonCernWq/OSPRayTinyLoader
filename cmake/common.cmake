@@ -120,3 +120,21 @@ FIND_PACKAGE(ospray REQUIRED)
 INCLUDE_DIRECTORIES(${OSPRAY_INCLUDE_DIRS})
 MESSAGE(STATUS "OSPRay Include: ${OSPRAY_INCLUDE_DIRS}")
 MESSAGE(STATUS "OSPRay Libraries: ${OSPRAY_LIBRARIES}")
+#
+#--- image magick++
+#
+FIND_PACKAGE(ImageMagick COMPONENTS Magick++)
+IF (IMAGEMAGICK_FOUND)
+  ADD_DEFINITIONS(-DUSE_IMAGEMAGICK)
+  INCLUDE_DIRECTORIES(
+    ${ImageMagick_Magick++_INCLUDE_DIR}
+    ${ImageMagick_Magick++_ARCH_INCLUDE_DIR}
+    )
+  SET(MAGICK_LIBRARIES ${ImageMagick_Magick++_LIBRARY})
+  LIST(APPEND COMMON_LIBS ${MAGICK_LIBRARIES})
+ELSE()
+  MESSAGE(STATUS
+    "ImageMagick not found. Texture loaders other than PPM & PNG are disabled."
+    )
+ENDIF()
+

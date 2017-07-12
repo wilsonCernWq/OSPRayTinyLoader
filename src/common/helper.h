@@ -28,9 +28,9 @@
     std::cout << std::endl;				\
   }
 #else
-# define DEBUG_VECTOR (n, t)                     \
-  static void debug(const cy::Point##n##t& m) {} \
-  static void debug(const cy::Matrix##n##t& m) {}
+# define DEBUG_VECTOR(n, t)                        \
+  static void debug(const cy::Point##n##t& m)  {;} \
+  static void debug(const cy::Matrix##n##t& m) {;}
 #endif                                                     
 
 #define CAST_VECTOR(n, t)						\
@@ -98,10 +98,18 @@ namespace otv
 {
   struct ImageData {
     std::vector<unsigned char> data;
-    unsigned int width = 0, height = 0;
+    unsigned int width = 0, height = 0, depth = 0;
     unsigned int channel = 0;
     bool IsEmpty() { return (width * height) <= 0; }
     vec2i Size() { return vec2i(width, height); }
+    OSPTexture2D CreateOSPTex() {
+      OSPTexture2D osptex =
+	ospNewTexture2D(osp::vec2i{(int)width, (int)height}, 
+			channel == 4 ? OSP_TEXTURE_RGBA8 : OSP_TEXTURE_RGB8,
+			data.data(),
+			OSP_DATA_SHARED_BUFFER);      
+      return osptex;
+    };
   };
 
   //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]

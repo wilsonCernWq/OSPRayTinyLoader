@@ -1,21 +1,21 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "meshwrapper.h"
 
-cyPoint3f otv::Mesh::GetMaterial(unsigned int i, std::string str) 
-{
-    // if (str.compare("Ka") == 0) {
-    // 	return cyPoint3f(tiny.materials[i].ambient);
-    // } 
-    // else if (str.compare("Kd") == 0) {
-    // 	return cyPoint3f(tiny.materials[i].diffuse);
-    // }
-    // else if (str.compare("Ks") == 0) {
-    // 	return cyPoint3f(tiny.materials[i].specular);
-    // }
-    // else if (str.compare("Tf") == 0) {
-    // 	return cyPoint3f(tiny.materials[i].transmittance);
-    // }
-}
+// cyPoint3f otv::Mesh::GetMaterial(unsigned int i, std::string str) 
+// {
+//     // if (str.compare("Ka") == 0) {
+//     // 	return cyPoint3f(tiny.materials[i].ambient);
+//     // } 
+//     // else if (str.compare("Kd") == 0) {
+//     // 	return cyPoint3f(tiny.materials[i].diffuse);
+//     // }
+//     // else if (str.compare("Ks") == 0) {
+//     // 	return cyPoint3f(tiny.materials[i].specular);
+//     // }
+//     // else if (str.compare("Tf") == 0) {
+//     // 	return cyPoint3f(tiny.materials[i].transmittance);
+//     // }
+// }
 
 bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
 {
@@ -35,7 +35,8 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
     bbox.lower = vec3f(std::numeric_limits<float>::max());
 
     // initialize _geometries_ and _materials_ array
-    materials.resize(tiny.materials.size()+1); // the last material is the default
+    // --- the last material is the default
+    materials.resize(tiny.materials.size()+1); 
     geometries.resize(tiny.shapes.size());
 
     // process geometry
@@ -45,19 +46,17 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
       //       but we need only one material per geometry
       //       so we use the first face for material index
       geo.num_faces = tiny.shapes[s].mesh.num_face_vertices.size();
-      if (tiny.shapes[s].mesh.num_face_vertices.size() > 0) {
+      if (geo.num_faces > 0) {
 	geo.mtl_index = tiny.shapes[s].mesh.material_ids[0];
       }
       else {
 	std::cerr << "Warning: found one shape with no faces" << std::endl;
       }
       size_t vidx_offset = 0;
-      for (size_t f = 0; f < tiny.shapes[s].mesh.num_face_vertices.size(); f++) {
-
+      for (size_t f = 0; f < geo.num_faces; f++) {
 	// Loop over faces (polygon)
 	// per-face material
 	// geo.mtl_index = tiny.shapes[s].mesh.material_ids[f];
-
 	//int geo_index = mtl_index;
 	//if (geo_index < 0) { 
 	//  std::cerr << "wrong index" << std::endl; exit(EXIT_FAILURE); 
@@ -65,12 +64,18 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
 	
 	// number of vertices of this face
 	int fv = tiny.shapes[s].mesh.num_face_vertices[f]; 
-	if (fv != 3) { 
-	  std::cerr << "Error: this mesh is not a pure trianglar mesh" << std::endl;
+	if (fv != 3) {
+	  static bool warned = false;
+	  if (!warned) {
+	    std::cerr << "Error: this mesh is not a pure trianglar mesh"
+		      << std::endl;
+	    warned = true;
+	  }
 	  exit(EXIT_FAILURE); 
 	}	
-	
-	for (size_t v = 0; v < fv /*fv=3*/; v++) { // Loop over vertices in the face.
+
+	// Loop over vertices in the face.
+	for (size_t v = 0; v < fv /*fv=3*/; v++) {
 
 	  tinyobj::index_t idx = tiny.shapes[s].mesh.indices[vidx_offset + v];
 	  float vx = tiny.attributes.vertices[3 * idx.vertex_index + 0];
@@ -100,7 +105,11 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
 	    geo.normal.push_back(nz);
 	  } 
 	  else {
-	    std::cerr << "wrong normal" << std::endl; //exit(EXIT_FAILURE);
+	    static bool warned = false;
+	    if (!warned) {
+	      std::cerr << "Warning: wrong normal" << std::endl;
+	      warned = true;
+	    }
 	  }
 	  
 	  if (idx.texcoord_index >= 0) {
@@ -111,12 +120,15 @@ bool otv::Mesh::LoadFromFileObj(const char* fname, bool loadMtl)
 	    geo.texcoord.push_back(ty);
 	  }
 	  else {
-	    std::cerr << "wrong texcoord" << std::endl;
+	    static bool warned = false;
+	    if (!warned) {
+	      std::cerr << "Error: wrong texcoord" << std::endl;
+	      warned = true;
+	    }
 	    exit(EXIT_FAILURE); // will cause segfault
 	  }
 	}
-	vidx_offset += fv;
-	
+	vidx_offset += fv;	
       }
     }
     
@@ -165,59 +177,35 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 	ospSetObject(gdata, "vertex.texcoord", tdata);
       }
       //! material
-      auto& mtl = materials[geo.mtl_index < 0 ? (materials.size()-1) : geo.mtl_index];
+      auto& mtl =
+	materials[geo.mtl_index < 0 ? (materials.size()-1) : geo.mtl_index];
       OSPMaterial mtl_data = ospNewMaterial(renderer, "OBJMaterial");
       ospSetVec3f(mtl_data, "Kd", (osp::vec3f&)mtl.Kd);
       ospSetVec3f(mtl_data, "Ks", (osp::vec3f&)mtl.Ks);
       ospSet1f(mtl_data, "Ns", mtl.Ns);
       ospSet1f(mtl_data, "d",  mtl.d);	    
       if (!mtl.map_Kd.IsEmpty()) {
-	auto tex_dim = mtl.map_Kd.Size();
-	OSPTexture2D map_Kd = 
-	  ospNewTexture2D((osp::vec2i&)tex_dim, 
-			  OSP_TEXTURE_RGBA8,
-			  mtl.map_Kd.data.data(),
-			  OSP_DATA_SHARED_BUFFER);
+	OSPTexture2D map_Kd = mtl.map_Kd.CreateOSPTex();
 	ospCommit(map_Kd);
 	ospSetObject(mtl_data, "map_Kd", map_Kd);
       }
       if (!mtl.map_Ks.IsEmpty()) {
-	auto tex_dim = mtl.map_Ks.Size();
-	OSPTexture2D map_Ks = 
-	  ospNewTexture2D((osp::vec2i&)tex_dim, 
-			  OSP_TEXTURE_RGBA8, 
-			  mtl.map_Ks.data.data(),
-			  OSP_DATA_SHARED_BUFFER);
+	OSPTexture2D map_Ks = mtl.map_Ks.CreateOSPTex();
 	ospCommit(map_Ks);
 	ospSetObject(mtl_data, "map_Ks", map_Ks);
       }
       if (!mtl.map_Ns.IsEmpty()) {
-	auto tex_dim = mtl.map_Ns.Size();
-	OSPTexture2D map_Ns = 
-	  ospNewTexture2D((osp::vec2i&)tex_dim, 
-			  OSP_TEXTURE_RGBA8, 
-			  mtl.map_Ns.data.data(),
-			  OSP_DATA_SHARED_BUFFER);
+	OSPTexture2D map_Ns = mtl.map_Ns.CreateOSPTex();
 	ospCommit(map_Ns);
 	ospSetObject(mtl_data, "map_Ns", map_Ns);
       }
       if (!mtl.map_d.IsEmpty()) {
-	auto tex_dim = mtl.map_d.Size();
-	OSPTexture2D map_d = 
-	  ospNewTexture2D((osp::vec2i&)tex_dim, 
-			  OSP_TEXTURE_RGBA8, 
-			  mtl.map_d.data.data(),
-			  OSP_DATA_SHARED_BUFFER);
+	OSPTexture2D map_d = mtl.map_d.CreateOSPTex();
 	ospCommit(map_d);
 	ospSetObject(mtl_data, "map_d", map_d);
       }
       if (!mtl.map_Bump.IsEmpty()) {
-	auto tex_dim = mtl.map_Bump.Size();
-	OSPTexture2D map_Bump =
-	  ospNewTexture2D((osp::vec2i&)tex_dim, 
-			  OSP_TEXTURE_RGBA8, 
-			  mtl.map_Bump.data.data(),
-			  OSP_DATA_SHARED_BUFFER);
+	OSPTexture2D map_Bump = mtl.map_Bump.CreateOSPTex();
 	ospCommit(map_Bump);
 	ospSetObject(mtl_data, "map_Bump", map_Bump);
       }
