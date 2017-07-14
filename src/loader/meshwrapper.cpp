@@ -1,9 +1,24 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "meshwrapper.h"
 
+std::string ParsePath(const std::string& str)
+{
+  std::string cstr = str;
+#if						\
+  defined(WIN32)  ||				\
+  defined(_WIN32) ||				\
+  defined(__WIN32) &&				\
+  !defined(__CYGWIN__)
+  std::replace(cstr.begin(), cstr.end(), '/', '\\');
+#else
+  std::replace(cstr.begin(), cstr.end(), '\\', '/');
+#endif
+  return cstr;
+}
+
 void
 otv::Material::LoadMtl
-(const tinyobj::material_t& tinymtl, std::string& dirpath)
+(const tinyobj::material_t& tinymtl, std::string& dpath)
 {
   // load constants
   Kd = vec3f(tinymtl.diffuse[0],
@@ -15,23 +30,26 @@ otv::Material::LoadMtl
   Ns = tinymtl.shininess;
   d  = tinymtl.dissolve;
   // load textures
-  loadimg(map_Kd, tinymtl.diffuse_texname, dirpath);
-  loadimg(map_Ks, tinymtl.specular_texname, dirpath);
-  loadimg(map_Ns, tinymtl.specular_highlight_texname, dirpath);
-  loadimg(map_d, tinymtl.alpha_texname, dirpath);
-  loadimg(map_Bump, tinymtl.bump_texname, dirpath);
+  loadimg(map_Kd,   ParsePath(tinymtl.diffuse_texname), dpath);
+  loadimg(map_Ks,   ParsePath(tinymtl.specular_texname), dpath);
+  loadimg(map_Ns,   ParsePath(tinymtl.specular_highlight_texname), dpath);
+  loadimg(map_d,    ParsePath(tinymtl.alpha_texname), dpath);
+  loadimg(map_Bump, ParsePath(tinymtl.bump_texname), dpath);
 }
 
-std::string
-otv::Mesh::SplitPath
+void
+otv::Mesh::ComputePath
 (const std::string& str)
 {
-  size_t i = str.find_last_of("/\\");
-  if (i != std::string::npos) {
-    return str.substr(0, i + 1);
+  fpath = ParsePath(str);
+  size_t p = fpath.find_last_of("/\\");
+  if (p != std::string::npos) {
+    dpath = fpath.substr(0, p + 1);
+    fname = fpath.substr(p + 1, fpath.size()-dpath.size());
   }
   else {
-    return std::string("");
+    dpath = "";
+    fname = fpath;
   }
 }
 
@@ -48,16 +66,20 @@ otv::Mesh::TinyObjLoader::Clear()
 
 bool
 otv::Mesh::LoadFromFileObj
-(const char* fname, bool loadMtl)
+(const char* filename, bool loadMtl)
 {
-  // load mesh from file using tiny obj loader
-  dirpath = SplitPath(fname);
+  // initialize
   tiny.Clear();
+  ComputePath(filename);
+  
+  // load mesh from file using tiny obj loader
   bool succeed = tinyobj::LoadObj(&(tiny.attributes), 
 				  &(tiny.shapes), 
 				  &(tiny.materials), 
 				  &(tiny.err), 
-				  fname, DirPath(), true);
+				  fpath.c_str(),
+				  dpath == "" ? nullptr : dpath.c_str(),
+				  true);
   if (!tiny.err.empty()) { std::cerr << tiny.err << std::endl; }
   if (!succeed) { return false; }
 
@@ -162,7 +184,7 @@ otv::Mesh::LoadFromFileObj
   // process materials
   for (int i = 0; i < tiny.materials.size(); ++i)
   {
-    materials[i].LoadMtl(tiny.materials[i], dirpath);
+    materials[i].LoadMtl(tiny.materials[i], dpath);
   }
   return true;
 }

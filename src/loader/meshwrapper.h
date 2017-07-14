@@ -35,7 +35,7 @@ namespace otv {
   //! on this Mesh class
   class Mesh {
   private:
-    std::string SplitPath(const std::string& str);
+    void ComputePath(const std::string& str);
   public:
     struct TinyObjLoader
     {
@@ -47,15 +47,17 @@ namespace otv {
     };
     TinyObjLoader tiny;
     bbox3f bbox; // mesh bounding box
-    std::string dirpath; // directory path to the mesh folder
+    std::string dpath; // directory path to the mesh folder
+    std::string fpath; // directory path to the mesh folder
+    std::string fname; // filename of the mesh
     std::vector<Material> materials;
     std::vector<Geometry> geometries;
   public:
     /** \brief Accessors */
-    const char* DirPath()
-    {
-      return dirpath == "" ? nullptr : dirpath.c_str();
-    }
+    /* const char* DirPath() */
+    /* { */
+    /*   return dpath == "" ? nullptr : dpath.c_str(); */
+    /* } */
     vec3f GetBBoxMax()
     {
       return bbox.upper;
@@ -76,7 +78,7 @@ namespace otv {
      * \brief Overriding LoadFromFileObj function for TriMesh,
      *  force to triangulate
      */
-    bool LoadFromFileObj(const char* fname, bool loadMtl = true);
+    bool LoadFromFileObj(const char* filename, bool loadMtl = true);
     /**
      * \brief OSPRay helper     
      */
