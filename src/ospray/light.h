@@ -30,12 +30,7 @@ namespace otv {
     OSPData& GetOSPLights() { return osplights; }
     OrbitalPoint& GetDirLight() { return ptDir; }
     OrbitalPoint& GetSunLight() { return ptSun; }
-    void Clean() {
-      if (osplights != nullptr) { ospRelease(osplights); osplights = nullptr; }
-      if (ospAmb != nullptr) { ospRelease(ospAmb); ospAmb = nullptr; }
-      if (ospDir != nullptr) { ospRelease(ospDir); ospDir = nullptr; }
-      if (ospSun != nullptr) { ospRelease(ospSun); ospSun = nullptr; }
-    }
+    void Clean();
     void Update();
     void Init(OSPRenderer renderer);
   };

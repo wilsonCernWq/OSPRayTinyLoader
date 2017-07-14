@@ -1,6 +1,7 @@
 #include "light.h"
 
-::otv::Light::Light () {
+otv::Light::Light ()
+{
   Iamb = 0.50f;
   Idir = 1.50f;
   Isun = 0.90f;
@@ -15,9 +16,12 @@
   ptSun.p     = vec3f(0.462f,-1.f,-.1f);
   ptSun.u     = vec3f(0.0f, 1.0f, 0.0f);
   ptSun.d = ptSun.focus - ptSun.p;
-  }
+}
 
-void ::otv::Light::Init(OSPRenderer renderer) {
+void
+otv::Light::Init
+(OSPRenderer renderer)
+{
   if (ospAmb != nullptr) { ospRelease(ospAmb); }
   ospAmb = ospNewLight(renderer, "AmbientLight");
   if (ospDir != nullptr) { ospRelease(ospDir); }
@@ -31,7 +35,8 @@ void ::otv::Light::Init(OSPRenderer renderer) {
   ospCommit(osplights);
 }
 
-void ::otv::Light::Update()
+void
+otv::Light::Update()
 {
   // ambient light
   {
@@ -54,11 +59,19 @@ void ::otv::Light::Update()
   {
     ptSun.Update();
     ospSetVec3f(this->ospSun, "direction", (osp::vec3f&)ptSun.cp);
-    ospSet1f(this->ospSun, "angularDiameter", 53.0f);
+    ospSet1f(this->ospSun, "angularDiameter", 0.53f);
     ospSet1f(this->ospSun, "intensity", Isun);
     ospSet1i(this->ospSun, "isVisible", 0);
     ospSetVec3f(this->ospSun, "color", (osp::vec3f&)Csun);
     ospCommit(this->ospSun);
   }
-
 }
+
+void
+otv::Light::Clean() {
+  if (osplights != nullptr) { ospRelease(osplights); osplights = nullptr; }
+  if (ospAmb != nullptr) { ospRelease(ospAmb); ospAmb = nullptr; }
+  if (ospDir != nullptr) { ospRelease(ospDir); ospDir = nullptr; }
+  if (ospSun != nullptr) { ospRelease(ospSun); ospSun = nullptr; }
+}
+

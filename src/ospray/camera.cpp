@@ -1,5 +1,21 @@
 #include "camera.h"
 
+void otv::Camera::Init(vec2i size) 
+{
+  ospCam = ospNewCamera("perspective");
+  ospSetf(ospCam, "aspect", 
+	  static_cast<float>(size.x) / 
+	  static_cast<float>(size.y));
+  Update();
+}
+
+void otv::Camera::Clean() {
+  if (ospCam != nullptr) {
+    ospRelease(this->ospCam);	 
+    ospCam = nullptr;
+  }
+}
+
 void otv::Camera::Update()
 {
   this->dir = this->focus - this->pos;

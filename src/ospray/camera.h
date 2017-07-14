@@ -18,26 +18,14 @@ namespace otv {
   public:
     Camera() = default;
     ~Camera() { Clean(); }
+    OSPCamera& GetOSPCamera() { return ospCam; }
     void SetZoomIn() { this->zoom *= 0.9f; }
     void SetZoomOut() { this->zoom /= 0.9f; }
     void SetZoom(float zoom) { this->zoom = zoom; }
-    void SetFocus(vec3f focus) { this->focus = focus; }   
+    void SetFocus(vec3f focus) { this->focus = focus; }
     void Update();
-    void Init(vec2i size) 
-    {
-      ospCam = ospNewCamera("perspective");
-      ospSetf(ospCam, "aspect", 
-	      static_cast<float>(size.x) / 
-	      static_cast<float>(size.y));
-      Update();
-    }
-    void Clean() {
-      if (ospCam != nullptr) {
-	ospRelease(this->ospCam);	 
-	ospCam = nullptr;
-      }
-    }
-    OSPCamera& GetOSPCamera() { return ospCam; }
+    void Init(vec2i size);
+    void Clean();
   };
 
 };

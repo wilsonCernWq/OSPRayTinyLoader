@@ -1,6 +1,7 @@
 #include "world.h"
 
-void otv::World::Clean()
+void
+otv::World::Clean()
 {
   light.Clean();
   camera.Clean();
@@ -19,7 +20,9 @@ void otv::World::Clean()
   }
 }
 
-void otv::World::CreateFrameBuffer(const vec2i& newsize) {
+void
+otv::World::CreateFrameBuffer(const vec2i& newsize)
+{
   if (ospfb != nullptr) {
     ospUnmapFrameBuffer(buffer, ospfb);
     ospFreeFrameBuffer(ospfb);
@@ -32,7 +35,8 @@ void otv::World::CreateFrameBuffer(const vec2i& newsize) {
   buffer = (uint32_t*)ospMapFrameBuffer(ospfb, OSP_FB_COLOR);
 }
 
-void otv::World::CreateModel()
+void
+otv::World::CreateModel()
 {
   if (ospmodel != nullptr) {
     ospRelease(ospmodel);
@@ -41,7 +45,8 @@ void otv::World::CreateModel()
   this->ospmodel = ospNewModel();
 }
 
-void otv::World::CreateRenderer(RENDERTYPE renderType)
+void
+otv::World::CreateRenderer(RENDERTYPE renderType)
 {
   if (osprenderer != nullptr) {
     ospRelease(osprenderer);
@@ -49,7 +54,7 @@ void otv::World::CreateRenderer(RENDERTYPE renderType)
   }
   // possible options: "scivis" "pathtracer"
   if (renderType == SCIVIS) {
-    std::cout << "Using scivis renderer" << std::endl;
+    std::cout << "[ospray] Using scivis renderer" << std::endl;
     this->osprenderer = ospNewRenderer("scivis");
     ospSet1i(this->osprenderer, "shadowsEnabled", 1);
     ospSet1i(this->osprenderer, "aoSamples", 16);
@@ -61,7 +66,7 @@ void otv::World::CreateRenderer(RENDERTYPE renderType)
     ospSetObject(this->osprenderer, "maxDepthTexture", NULL);
   }
   else if (renderType == PATHTRACER) {
-    std::cout << "Using pathtracer renderer" << std::endl;
+    std::cout << "[ospray] Using pathtracer renderer" << std::endl;
     this->osprenderer = ospNewRenderer("pathtracer");
     std::vector<unsigned char> backplate_ptr(size.x * size.y * 4,
 					     (unsigned char)0);
@@ -72,7 +77,7 @@ void otv::World::CreateRenderer(RENDERTYPE renderType)
     ospSetObject(this->osprenderer, "backplate", backplate_osp);
   }
   else {
-    std::cerr << "Error renderer type. "
+    std::cerr << "[Error] renderer type -- "
 	      << "The program is expected to crash soon!!!" << std::endl;
     return;
   }
@@ -83,8 +88,10 @@ void otv::World::CreateRenderer(RENDERTYPE renderType)
   ospCommit(this->osprenderer);
 }
 
-void otv::World::Init(const vec2i& newsize, RENDERTYPE renderType, otv::Mesh& mesh,
-	  vec3f cameraCenter, float cameraZoom)
+void
+otv::World::Init
+(const vec2i& newsize, RENDERTYPE renderType,
+ otv::Mesh& mesh, vec3f cameraCenter, float cameraZoom)
 {
   // create world & renderer
   CreateModel();
@@ -112,4 +119,29 @@ void otv::World::Init(const vec2i& newsize, RENDERTYPE renderType, otv::Mesh& me
 
   // commit
   ospCommit(this->osprenderer);
+}
+
+void
+otv::World::Create(int argc, const char **argv)
+{      
+  OpenGLCreate(argc, argv); // initialize openGL      
+  ospInit(&argc, argv); // setting up ospray
+}
+
+void
+otv::World::Start()
+{
+  OpenGLStart();      
+}    
+
+void
+otv::World::ClearFrame()
+{
+  ospFrameBufferClear(ospfb, OSP_FB_COLOR | OSP_FB_ACCUM);
+}
+
+void
+otv::World::Render()
+{
+  ospRenderFrame(ospfb, osprenderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 }

@@ -11,40 +11,22 @@ namespace otv {
     std::vector<float> normal;
     std::vector<float> texcoord;
     std::vector<unsigned int> index;
-    unsigned int mtl_index = -1;
-    unsigned int num_faces =  0;
+    int mtl_index = -1;
+    int num_faces =  0;
     bool has_normal   = false;
     bool has_texcoord = false;
   };
   struct Material {
-    vec3f Kd; // 0.8     diffuse color
-    vec3f Ks; // black   specular color
-    float Ns; // 10      shininess (Phong exponent), usually in [2–104]
-    float d;  // opaque  opacity
+    vec3f Kd = vec3f(0.7f); // 0.8     diffuse color
+    vec3f Ks = vec3f(0.3f); // black   specular color
+    float Ns = 99.0f; // 10      shininess (Phong exponent), usually in [2–104]
+    float d  = 1.0f;  // opaque  opacity
     ImageData map_Ks;
     ImageData map_Kd;
     ImageData map_Ns;
     ImageData map_d;
     ImageData map_Bump;
-    void LoadMtl(const tinyobj::material_t& tinymtl, std::string& dirpath)
-    {
-      // load constants
-      Kd = vec3f(tinymtl.diffuse[0],
-		 tinymtl.diffuse[1],
-		 tinymtl.diffuse[2]); // default 0.f
-      Ks = vec3f(tinymtl.specular[0],
-		 tinymtl.specular[1],
-		 tinymtl.specular[2]);
-      Ns = tinymtl.shininess;
-      d  = tinymtl.dissolve;
-      // load textures
-      loadimg(map_Kd, tinymtl.diffuse_texname, dirpath);
-      loadimg(map_Ks, tinymtl.specular_texname, dirpath);
-      loadimg(map_Ns, tinymtl.specular_highlight_texname, dirpath);
-      loadimg(map_d, tinymtl.alpha_texname, dirpath);
-      loadimg(map_Bump, tinymtl.bump_texname, dirpath);
-    }
-
+    void LoadMtl(const tinyobj::material_t& tinymtl, std::string& dirpath);
   };
   //! TODO: add support for more formats
   //! This structure is not very good for handling general mesh format
@@ -53,16 +35,7 @@ namespace otv {
   //! on this Mesh class
   class Mesh {
   private:
-    std::string SplitPath(const std::string& str)
-      {
-	size_t i = str.find_last_of("/\\");
-	if (i != std::string::npos) {
-	  return str.substr(0, i + 1);
-	}
-	else {
-	  return std::string("");
-	}
-      }
+    std::string SplitPath(const std::string& str);
   public:
     struct TinyObjLoader
     {
@@ -70,15 +43,8 @@ namespace otv {
       tinyobj::attrib_t                attributes; // attributes
       std::vector<tinyobj::shape_t>    shapes; // shapes
       std::vector<tinyobj::material_t> materials; // materials
-      void Clear() {
-	err.clear();
-	attributes.vertices.clear();
-	attributes.normals.clear();
-	attributes.texcoords.clear();
-	shapes.clear();
-	materials.clear();
-      }
-    };    
+      void Clear();
+    };
     TinyObjLoader tiny;
     bbox3f bbox; // mesh bounding box
     std::string dirpath; // directory path to the mesh folder
@@ -90,7 +56,6 @@ namespace otv {
     {
       return dirpath == "" ? nullptr : dirpath.c_str();
     }
-    // cyPoint3f GetMaterial(unsigned int i, std::string str);
     vec3f GetBBoxMax()
     {
       return bbox.upper;
