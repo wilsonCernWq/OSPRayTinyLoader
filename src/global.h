@@ -11,13 +11,23 @@ namespace otv
 {
   // objects
   extern World world;  
-  extern Mesh mesh;
+  extern std::vector<Mesh*> meshes;
   // flags 
   extern bool NOWIN_FLAG;
   // parameters
   extern int   WINX, WINY;
   extern vec2i WINSIZE;
-
+  // function handlers
+  extern std::vector<std::function<void()>> cleanlist;
 };
 
 #endif//_GLOBAL_H_
+
+
+
+
+
+
+
+
+

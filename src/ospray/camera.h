@@ -11,7 +11,7 @@ namespace otv {
   private:
     float zoom = 1.0f;
     vec3f focus = vec3f(0.0f);
-    vec3f pos   = vec3f(0.0f, 0.0f, 10.0f);
+    vec3f pos   = vec3f(0.0f, 1.0f, 1.0f);
     vec3f up    = vec3f(0.0f, 1.0f, 0.0f);
     vec3f dir = focus - pos;
     OSPCamera ospCam = nullptr;

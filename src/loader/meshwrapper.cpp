@@ -1,5 +1,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "meshwrapper.h"
+#include <limits>
 
 std::string ParsePath(const std::string& str)
 {

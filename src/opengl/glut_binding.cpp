@@ -11,8 +11,11 @@ void otv::KeyboardAction(int key, int x, int y)
   switch (key) {
   case 27:
     if (!otv::NOWIN_FLAG) {
+      // this is just a hack to stop the rendering loop
+      // a better way is to setup a new flag to control it
+      // but this way should work currently
       otv::NOWIN_FLAG = true;
-      world.Clean();
+      for (auto& c : cleanlist) { c(); }
       gfb.Delete();
     }
     glutLeaveMainLoop();

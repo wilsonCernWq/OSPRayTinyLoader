@@ -1,14 +1,18 @@
 #include "world.h"
+#include <limits>
+#include <glm/gtx/norm.hpp>
+ 
+otv::World::World() : winsize (0), fb (nullptr) {}
 
 void
 otv::World::Clean()
 {
   light.Clean();
   camera.Clean();
-  if (this->ospfb != nullptr) {    
-    ospUnmapFrameBuffer(this->buffer, this->ospfb);
-    ospFreeFrameBuffer(this->ospfb);
-    this->ospfb = nullptr;
+  if (this->ospframebuffer != nullptr) {    
+    ospUnmapFrameBuffer(this->fb, this->ospframebuffer);
+    ospFreeFrameBuffer(this->ospframebuffer);
+    this->ospframebuffer = nullptr;
   }
   if (this->ospmodel != nullptr) {
     ospRelease(this->ospmodel);
@@ -23,16 +27,16 @@ otv::World::Clean()
 void
 otv::World::CreateFrameBuffer(const vec2i& newsize)
 {
-  if (ospfb != nullptr) {
-    ospUnmapFrameBuffer(buffer, ospfb);
-    ospFreeFrameBuffer(ospfb);
-    ospfb = nullptr;
+  if (ospframebuffer != nullptr) {
+    ospUnmapFrameBuffer(fb, ospframebuffer);
+    ospFreeFrameBuffer(ospframebuffer);
+    ospframebuffer = nullptr;
   }
-  size = newsize;
-  ospfb = ospNewFrameBuffer((osp::vec2i&)size,
-			    OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
-  ospFrameBufferClear(ospfb, OSP_FB_COLOR | OSP_FB_ACCUM);
-  buffer = (uint32_t*)ospMapFrameBuffer(ospfb, OSP_FB_COLOR);
+  winsize = newsize;
+  ospframebuffer = ospNewFrameBuffer((osp::vec2i&)winsize,
+				     OSP_FB_SRGBA, OSP_FB_COLOR | OSP_FB_ACCUM);
+  ospFrameBufferClear(ospframebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+  fb = (uint32_t*)ospMapFrameBuffer(ospframebuffer, OSP_FB_COLOR);
 }
 
 void
@@ -55,93 +59,114 @@ otv::World::CreateRenderer(RENDERTYPE renderType)
   // possible options: "scivis" "pathtracer"
   if (renderType == SCIVIS) {
     std::cout << "[ospray] Using scivis renderer" << std::endl;
-    this->osprenderer = ospNewRenderer("scivis");
-    ospSet1i(this->osprenderer, "shadowsEnabled", 1);
-    ospSet1i(this->osprenderer, "aoSamples", 16);
-    ospSet1f(this->osprenderer, "aoDistance", 1e20);
-    ospSet1i(this->osprenderer, "aoTransparencyEnabled", 1);
-    ospSet1i(this->osprenderer, "oneSidedLighting", 0);
-    ospSetVec4f(this->osprenderer, "bgColor",
+    osprenderer = ospNewRenderer("scivis");
+    ospSet1i(osprenderer, "shadowsEnabled", 1);
+    ospSet1i(osprenderer, "aoSamples", 16);
+    ospSet1f(osprenderer, "aoDistance", 1e20);
+    ospSet1i(osprenderer, "aoTransparencyEnabled", 1);
+    ospSet1i(osprenderer, "oneSidedLighting", 0);
+    ospSetVec4f(osprenderer, "bgColor",
 		osp::vec4f{0.0f, 0.0f, 0.0f, 0.0f});
-    ospSetObject(this->osprenderer, "maxDepthTexture", NULL);
+    ospSetObject(osprenderer, "maxDepthTexture", NULL);
   }
   else if (renderType == PATHTRACER) {
     std::cout << "[ospray] Using pathtracer renderer" << std::endl;
-    this->osprenderer = ospNewRenderer("pathtracer");
-    std::vector<unsigned char> backplate_ptr(size.x * size.y * 4,
+    osprenderer = ospNewRenderer("pathtracer");
+    std::vector<unsigned char> backplate_ptr(winsize.x * winsize.y * 4,
 					     (unsigned char)0);
-    OSPTexture2D backplate_osp = ospNewTexture2D((osp::vec2i&)size,
+    OSPTexture2D backplate_osp = ospNewTexture2D((osp::vec2i&)winsize,
 						 OSP_TEXTURE_RGBA8,
 						 backplate_ptr.data());
     ospCommit(backplate_osp);
-    ospSetObject(this->osprenderer, "backplate", backplate_osp);
+    ospSetObject(osprenderer, "backplate", backplate_osp);
   }
   else {
     std::cerr << "[Error] renderer type -- "
 	      << "The program is expected to crash soon!!!" << std::endl;
     return;
   }
-  ospSet1i(this->osprenderer, "spp", 1);
-  ospSet1i(this->osprenderer, "maxDepth", 10);
-  ospSet1f(this->osprenderer, "epsilon", 1e-6);
-  ospSet1f(this->osprenderer, "varianceThreshold", 0.0f);
-  ospCommit(this->osprenderer);
+  ospSet1i(osprenderer, "spp", 1);
+  ospSet1i(osprenderer, "maxDepth", 10);
+  ospSet1f(osprenderer, "epsilon", 1e-6);
+  ospSet1f(osprenderer, "varianceThreshold", 0.0f);
+  ospCommit(osprenderer);
 }
 
 void
 otv::World::Init
-(const vec2i& newsize, RENDERTYPE renderType,
- otv::Mesh& mesh, vec3f cameraCenter, float cameraZoom)
+(const vec2i& newsize, RENDERTYPE renderType, std::vector<otv::Mesh*>& meshes)
 {
+  winsize = newsize;
+  bbox.upper = vec3f(std::numeric_limits<float>::min());
+  bbox.lower = vec3f(std::numeric_limits<float>::max());
   // create world & renderer
   CreateModel();
   CreateRenderer(renderType);
   CreateFrameBuffer(newsize);
       
   // add all meshes
-  mesh.AddToModel(this->ospmodel, this->osprenderer);
-  ospCommit(this->ospmodel);
-
+  for (auto& mesh : meshes) {
+    mesh->AddToModel(ospmodel, osprenderer);
+    bbox.upper = glm::max(bbox.upper, mesh->GetBBoxMax());
+    bbox.lower = glm::min(bbox.lower, mesh->GetBBoxMin());
+    objects.push_back(mesh);
+  }
+  ospCommit(ospmodel);
+  
   // camera
-  // TODO need to impove here
-  this->camera.SetFocus(cameraCenter);
-  this->camera.SetZoom(cameraZoom);     
-  this->camera.Init(this->size);
+  vec3f center = 0.5f * (bbox.upper + bbox.lower);
+  float zratio = glm::length(bbox.upper - bbox.lower);
+  std::cout << "[ospray] bbox.upper: "
+	    << "("
+	    << bbox.upper.x << " " << bbox.upper.y << " " << bbox.upper.z
+	    << ")"
+	    << std::endl;
+  std::cout << "[ospray] bbox.lower: "
+	    << "("
+    	    << bbox.lower.x << " " << bbox.lower.y << " " << bbox.lower.z
+    	    << ")"
+	    << std::endl;
+  std::cout << "[ospray] center: "
+	    << center.x << " " << center.y << " " << center.z
+	    << std::endl;
+  camera.SetFocus(center);
+  camera.SetZoom(zratio);
+  camera.Init(winsize);
 
   // light
-  light.Init(this->osprenderer);
+  light.Init(osprenderer);
       
   //! register lights
-  ospSetObject(this->osprenderer, "model", this->ospmodel);
-  ospSetObject(this->osprenderer, "lights", this->light.GetOSPLights());
-  ospSetObject(this->osprenderer, "camera", this->camera.GetOSPCamera());
-  ospCommit(this->osprenderer);
+  ospSetObject(osprenderer, "model", ospmodel);
+  ospSetObject(osprenderer, "lights", light.GetOSPLights());
+  ospSetObject(osprenderer, "camera", camera.GetOSPCamera());
+  ospCommit(osprenderer);
 
   // commit
-  ospCommit(this->osprenderer);
+  ospCommit(osprenderer);
 }
 
 void
 otv::World::Create(int argc, const char **argv)
 {      
-  OpenGLCreate(argc, argv); // initialize openGL      
+  OpenGLCreate(argc, argv); // initialize openGL 
   ospInit(&argc, argv); // setting up ospray
 }
 
 void
 otv::World::Start()
 {
-  OpenGLStart();      
-}    
+  OpenGLStart();
+}
 
 void
 otv::World::ClearFrame()
 {
-  ospFrameBufferClear(ospfb, OSP_FB_COLOR | OSP_FB_ACCUM);
+  ospFrameBufferClear(ospframebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
 }
 
 void
 otv::World::Render()
 {
-  ospRenderFrame(ospfb, osprenderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+  ospRenderFrame(ospframebuffer, osprenderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 }
