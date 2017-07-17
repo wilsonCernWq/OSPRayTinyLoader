@@ -187,6 +187,12 @@ otv::Mesh::LoadFromFileObj
   {
     materials[i].LoadMtl(tiny.materials[i], dpath);
   }
+
+  // initialize transform
+  transform.l.vx = vec3f(1.f, 0.f, 0.f);
+  transform.l.vy = vec3f(0.f, 1.f, 0.f);
+  transform.l.vz = vec3f(0.f, 0.f, 1.f);
+  transform.p    = vec3f(0.f, 0.f, 0.f);
   return true;
 }
 
@@ -205,6 +211,7 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 		   OSP_DATA_SHARED_BUFFER);
       ospCommit(vdata);
       ospSetObject(gdata, "vertex", vdata);
+      ospRelease(vdata);
       
       // index
       OSPData idata = 
@@ -213,7 +220,8 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 		   OSP_DATA_SHARED_BUFFER);
       ospCommit(idata);
       ospSetObject(gdata, "index", idata);
-
+      ospRelease(idata);
+      
       // normal
       if (geo.has_normal) {
 	OSPData ndata =
@@ -222,6 +230,7 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 		     OSP_DATA_SHARED_BUFFER);
 	ospCommit(ndata);
 	ospSetObject(gdata, "vertex.normal", ndata);
+	ospRelease(ndata);
       }
 
       // texture coordinate
@@ -232,8 +241,9 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 		     OSP_DATA_SHARED_BUFFER);
 	ospCommit(tdata);
 	ospSetObject(gdata, "vertex.texcoord", tdata);
+	ospRelease(tdata);
       }
-
+      
       // material
       // note: one geometry should have one corresponding material
       //       if the `mtl_index` is -1, which means the OBJ file
@@ -250,33 +260,48 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 	OSPTexture2D map_Kd = mtl.map_Kd.CreateOSPTex();
 	ospCommit(map_Kd);
 	ospSetObject(mtl_data, "map_Kd", map_Kd);
+	ospRelease(map_Kd);
       }
       if (!mtl.map_Ks.IsEmpty()) {
 	OSPTexture2D map_Ks = mtl.map_Ks.CreateOSPTex();
 	ospCommit(map_Ks);
 	ospSetObject(mtl_data, "map_Ks", map_Ks);
+	ospRelease(map_Ks);
       }
       if (!mtl.map_Ns.IsEmpty()) {
 	OSPTexture2D map_Ns = mtl.map_Ns.CreateOSPTex();
 	ospCommit(map_Ns);
 	ospSetObject(mtl_data, "map_Ns", map_Ns);
+	ospRelease(map_Ns);
       }
       if (!mtl.map_d.IsEmpty()) {
 	OSPTexture2D map_d = mtl.map_d.CreateOSPTex();
 	ospCommit(map_d);
 	ospSetObject(mtl_data, "map_d", map_d);
+	ospRelease(map_d);
       }
       if (!mtl.map_Bump.IsEmpty()) {
 	OSPTexture2D map_Bump = mtl.map_Bump.CreateOSPTex();
 	ospCommit(map_Bump);
 	ospSetObject(mtl_data, "map_Bump", map_Bump);
+	ospRelease(map_Bump);
       }
       ospCommit(mtl_data);
       ospSetMaterial(gdata, mtl_data);
-
+      ospRelease(mtl_data);
+				     
       //! commit geometry
       ospCommit(gdata);
-      ospAddGeometry(model, gdata);
+
+      //! apply transform
+      OSPModel local = ospNewModel(); // temporary model for affine transform
+      ospAddGeometry(local, gdata);
+      ospCommit(local);
+      ospRelease(gdata);
+
+      //! add to global model
+      ospAddGeometry(model, ospNewInstance(local, (osp::affine3f&)transform));      
+      ospRelease(local);
     }
   }
 }

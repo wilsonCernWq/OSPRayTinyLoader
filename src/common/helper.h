@@ -9,14 +9,14 @@
 #include "common.h"
 
 #ifndef NDEBUG
-# define DEBUG_VECTOR(n, t)			\
-  static void debug(const cy::Point##n##t& m) {	\
-    std::cout << std::endl;			\
-    for (int i = 0; i < n; ++i) {		\
-      std::cout << "\t" << m[i];		\
-    }						\
-    std::cout << std::endl;			\
-  }                                             \
+# define DEBUG_VECTOR(n, t)				\
+  static void debug(const cy::Point##n##t& m) {		\
+    std::cout << std::endl;				\
+    for (int i = 0; i < n; ++i) {			\
+      std::cout << "\t" << m[i];			\
+    }							\
+    std::cout << std::endl;				\
+  }							\
   static void debug(const cy::Matrix##n##t& m) {	\
     std::cout << std::endl;				\
     for (int i = 0; i < n; ++i) {			\
@@ -42,16 +42,22 @@
     return v;								\
   }
 
-#define DEFINE_MATH_TYPES(type, t)    \
-  typedef glm::tvec2<type> vec2##t;   \
-  typedef glm::tvec3<type> vec3##t;   \
-  typedef glm::tvec4<type> vec4##t;   \
-  typedef glm::tmat2x2<type> mat2##t; \
-  typedef glm::tmat3x3<type> mat3##t; \
-  typedef glm::tmat4x4<type> mat4##t; \
-  struct bbox2##t { vec2##t upper, lower; }; \
-  struct bbox3##t { vec3##t upper, lower; }; \
-  struct bbox4##t { vec4##t upper, lower; }; 
+#define DEFINE_MATH_TYPES(type, t)			\
+  typedef glm::tvec2<type> vec2##t;			\
+  typedef glm::tvec3<type> vec3##t;			\
+  typedef glm::tvec4<type> vec4##t;			\
+  typedef glm::tmat2x2<type> mat2##t;			\
+  typedef glm::tmat3x3<type> mat3##t;			\
+  typedef glm::tmat4x4<type> mat4##t;			\
+  struct bbox2##t { vec2##t upper, lower; };		\
+  struct bbox3##t { vec3##t upper, lower; };		\
+  struct bbox4##t { vec4##t upper, lower; };		\
+  struct linear2##t { vec2##t vx, vy; };		\
+  struct linear3##t { vec3##t vx, vy, vz; };		\
+  struct linear4##t { vec4##t vx, vy, vz, vw; };	\
+  struct affine2##t { linear2##t l; vec2##t p; };	\
+  struct affine3##t { linear3##t l; vec3##t p; };	\
+  struct affine4##t { linear4##t l; vec4##t p; };
 
 namespace cy {
   typedef Point2<int> Point2i;

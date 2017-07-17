@@ -46,6 +46,7 @@ namespace otv {
     };
     TinyObjLoader tiny;
     bbox3f bbox; // mesh bounding box
+    affine3f transform;
     std::string dpath; // directory path to the mesh folder
     std::string fpath; // directory path to the mesh folder
     std::string fname; // filename of the mesh
