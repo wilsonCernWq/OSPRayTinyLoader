@@ -1,6 +1,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "meshwrapper.h"
 #include <limits>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/ext.hpp>
 
 std::string ParsePath(const std::string& str)
 {
@@ -189,10 +192,20 @@ otv::Mesh::LoadFromFileObj
   }
 
   // initialize transform
-  transform.l.vx = vec3f(1.f, 0.f, 0.f);
-  transform.l.vy = vec3f(0.f, 1.f, 0.f);
-  transform.l.vz = vec3f(0.f, 0.f, 1.f);
-  transform.p    = vec3f(0.f, 0.f, 0.f);
+  //--- here vx, vy, vz are base vectors of the new coordinate
+  //--- thus they correspond to the 1st, 2nd & 3rd rows respectively
+  // transform.l.v[0] = vec3f(0.f, 0.f,-1.f);
+  // transform.l.v[1] = vec3f(0.f, 1.f, 0.f);
+  // transform.l.v[2] = vec3f(1.f, 0.f, 0.f);
+  // transform.p    = vec3f(0.f, 0.f, 0.f);
+  vec3f center = 0.5f * (bbox.upper + bbox.lower);
+  mat4f matrix = mat4f(1.0f);
+  matrix *= glm::translate(-center);
+  matrix *= glm::rotate(glm::radians(90.f), vec3f(0.f, 0.f, 1.f));
+  transform.l = matrix;
+  transform.p = center * transform.l;
+  bbox.upper -= center;
+  bbox.lower -= center;
   return true;
 }
 
@@ -300,7 +313,7 @@ void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
       ospRelease(gdata);
 
       //! add to global model
-      ospAddGeometry(model, ospNewInstance(local, (osp::affine3f&)transform));      
+      ospAddGeometry(model, ospNewInstance(local, (osp::affine3f&)transform));
       ospRelease(local);
     }
   }

@@ -7,6 +7,7 @@
 #define _HELPER_H_
 
 #include "common.h"
+#include <glm/gtc/matrix_access.hpp>
 
 #ifndef NDEBUG
 # define DEBUG_VECTOR(n, t)				\
@@ -32,7 +33,6 @@
   static void debug(const cy::Point##n##t& m)  {;} \
   static void debug(const cy::Matrix##n##t& m) {;}
 #endif                                                     
-
 #define CAST_VECTOR(n, t)						\
   static ospcommon::vec##n##t make_vec(const cy::Point##n##t& m) {	\
     ospcommon::vec##n##t v;						\
@@ -42,23 +42,6 @@
     return v;								\
   }
 
-#define DEFINE_MATH_TYPES(type, t)			\
-  typedef glm::tvec2<type> vec2##t;			\
-  typedef glm::tvec3<type> vec3##t;			\
-  typedef glm::tvec4<type> vec4##t;			\
-  typedef glm::tmat2x2<type> mat2##t;			\
-  typedef glm::tmat3x3<type> mat3##t;			\
-  typedef glm::tmat4x4<type> mat4##t;			\
-  struct bbox2##t { vec2##t upper, lower; };		\
-  struct bbox3##t { vec3##t upper, lower; };		\
-  struct bbox4##t { vec4##t upper, lower; };		\
-  struct linear2##t { vec2##t vx, vy; };		\
-  struct linear3##t { vec3##t vx, vy, vz; };		\
-  struct linear4##t { vec4##t vx, vy, vz, vw; };	\
-  struct affine2##t { linear2##t l; vec2##t p; };	\
-  struct affine3##t { linear3##t l; vec3##t p; };	\
-  struct affine4##t { linear4##t l; vec4##t p; };
-
 namespace cy {
   typedef Point2<int> Point2i;
   typedef Point3<int> Point3i;
@@ -66,16 +49,13 @@ namespace cy {
   typedef Matrix2<int> Matrix2i;
   typedef Matrix3<int> Matrix3i;
   typedef Matrix4<int> Matrix4i;
-
 };
-
 typedef cy::Point2<int> cyPoint2i;
 typedef cy::Point3<int> cyPoint3i;
 typedef cy::Point4<int> cyPoint4i;
 typedef cy::Matrix2<int> cyMatrix2i;
 typedef cy::Matrix3<int> cyMatrix3i;
 typedef cy::Matrix4<int> cyMatrix4i;
-
 namespace otv 
 {
   DEBUG_VECTOR(2,f);
@@ -84,20 +64,52 @@ namespace otv
   DEBUG_VECTOR(2,i);
   DEBUG_VECTOR(3,i);
   DEBUG_VECTOR(4,i);
-};
-
-namespace otv 
-{
   CAST_VECTOR(2,i);
   CAST_VECTOR(3,i);
   CAST_VECTOR(4,i);
   CAST_VECTOR(2,f);
   CAST_VECTOR(3,f);
   CAST_VECTOR(4,f);
+};
 
+#define DEFINE_LINEAR_TYPES(N, T)			\
+  struct bbox##N##T { vec##N##T upper, lower; };	\
+  struct linear##N##T {					\
+    vec##N##T v[N];					\
+    linear##N##T() = default;				\
+    linear##N##T(const mat##N##T &m) {			\
+      for (int i = 0; i < N; ++i) {			\
+	v[i] = glm::column(m, i);			\
+      }							\
+    }							\
+    linear##N##T& operator=(const mat##N##T &m) {	\
+      for (int i = 0; i < N; ++i) {			\
+	v[i] = glm::column(m, i);			\
+      }							\
+      return *this;					\
+    }							\
+  };						        \
+  struct affine##N##T {					\
+    mat##N##T l;					\
+    vec##N##T p;					\
+  };
+
+#define DEFINE_MATH_TYPES(type, t)		\
+  typedef glm::tvec2<type> vec2##t;		\
+  typedef glm::tvec3<type> vec3##t;		\
+  typedef glm::tvec4<type> vec4##t;		\
+  typedef glm::tmat2x2<type> mat2##t;		\
+  typedef glm::tmat3x3<type> mat3##t;		\
+  typedef glm::tmat4x4<type> mat4##t;		\
+  DEFINE_LINEAR_TYPES(2, t)			\
+  DEFINE_LINEAR_TYPES(3, t)			\
+  DEFINE_LINEAR_TYPES(4, t)
+  
+namespace otv
+{
   DEFINE_MATH_TYPES(int,    i);
   DEFINE_MATH_TYPES(float,  f);
-  DEFINE_MATH_TYPES(double, d);
+  DEFINE_MATH_TYPES(double, d);  
 };
 
 namespace otv 

@@ -18,6 +18,7 @@
 //#include <cyGL.h>
 
 // glm
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 // trying this obj loader https://github.com/syoyo/tinyobjloader
