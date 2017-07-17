@@ -48,14 +48,14 @@ target_link_libraries(osp_common ${COMMON_LIBS} ${OSPRAY_LIBRARIES})
 add_library(osp_loader SHARED ${LOADER_CXX})
 target_link_libraries(osp_loader osp_common)
 
-add_library(osp_opengl SHARED ${OPENGL_CXX})
-target_link_libraries(osp_opengl osp_common)
-
 add_library(osp_ospray SHARED ${OSPRAY_CXX})
-target_link_libraries(osp_ospray osp_common)
+target_link_libraries(osp_ospray osp_loader osp_common)
+
+add_library(osp_opengl SHARED ${OPENGL_CXX})
+target_link_libraries(osp_opengl osp_ospray osp_loader osp_common)
 
 add_library(osp_glob SHARED ${CXX})
-target_link_libraries(osp_glob osp_common osp_loader osp_opengl osp_ospray)
+target_link_libraries(osp_glob osp_opengl osp_ospray osp_loader osp_common)
 
 add_executable(loader ${MAIN})
 target_link_libraries(loader osp_glob)

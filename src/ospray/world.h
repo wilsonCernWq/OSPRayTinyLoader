@@ -8,8 +8,8 @@
 #include "light.h"
 #include "camera.h"
 
-namespace otv 
-{
+namespace otv {
+  
   class World {
   public:
     enum RENDERTYPE {SCIVIS, PATHTRACER};    
@@ -37,6 +37,7 @@ namespace otv
     /** \brief Access OSPRay objects */
     Light& GetLight() { return this->light; }
     Camera& GetCamera() { return this->camera; }
+    std::vector<otv::Mesh*>& GetMeshes() { return this->objects; }
     /** \brief Retrieve the rendered framebuffer data*/
     uint32_t* GetImageData() { return fb; }
     /** \brief Initialize ospray */

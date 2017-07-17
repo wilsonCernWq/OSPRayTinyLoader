@@ -18,7 +18,7 @@ std::string ParsePath(const std::string& str)
 }
 
 void
-otv::Material::LoadMtl
+otv::Mesh::Material::LoadMtl
 (const tinyobj::material_t& tinymtl, std::string& dpath)
 {
   // load constants

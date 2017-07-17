@@ -83,20 +83,8 @@ ENDIF()
 #   https://github.com/cemyuksel/cyCodeBase.git
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/cyCodeBase)
 #
-#--- add CImg
-#   https://github.com/dtschump/CImg
-#INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/CImg/CImg-2.0.0)
-#
 #--- lodePNG
 #   http://lodev.org/lodepng/
-#SET(LodePNG_ROOT_PATH "${PROJECT_SOURCE_DIR}/external/lodepng")
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/lodepng.cmake)
-# IF(LodePNG_FOUND)
-#   INCLUDE_DIRECTORIES(${LodePNG_INCLUDE_DIR})
-#   LIST(APPEND COMMON_LIBS ${LodePNG_LIBRARIES})
-# ELSE()
-#   MESSAGE(FATAL_ERROR " LodePNG not found!")
-# ENDIF()
 ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/external/lodepng)
 INCLUDE_DIRECTORIES(${LodePNG_INCLUDE_DIR})
 LIST(APPEND COMMON_LIBS ${LodePNG_LIBRARIES})
@@ -137,4 +125,7 @@ ELSE()
     "ImageMagick not found. Texture loaders other than PPM & PNG are disabled."
     )
 ENDIF()
-
+#
+#--- rapid JSON
+#
+INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/rapidjson/include")
