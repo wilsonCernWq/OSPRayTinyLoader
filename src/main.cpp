@@ -11,7 +11,7 @@ void renderstart
  const std::string bgmesh)
 {
   // register function handlers
-  otv::cleanlist.push_back([=](){
+  otv::RegisterCleaner([=](){
       std::cout << "[ospray] cleaning" << std::endl;
       otv::world.Clean();
       for (auto& m : otv::meshes) { delete m; m = nullptr; }
@@ -21,10 +21,10 @@ void renderstart
   for (size_t i = 0; i < files.size(); ++i) {
     otv::meshes[i] = new otv::Mesh();
     otv::meshes[i]->LoadFromFileObj(files[i].c_str());
+    otv::meshes[i]->SetTransform(otv::mat4f(1.0f)); // this should be called after loading
   }
   // world
-  otv::world.Init(size, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
-  otv::world.Start(); 
+  otv::world.Start(size, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
 }
 
 void help()
@@ -48,7 +48,7 @@ void arguments(int argc, const char **argv)
     arg = std::string(argv[i]);
     if (arg.compare("-nw") == 0) {
       std::cout << "#otv: no window mode" << std::endl;
-      otv::NOWIN_FLAG = true;
+      otv::NOWIN = true;
     }
     else if (arg.compare("-size") == 0)
     {
@@ -79,8 +79,8 @@ int main(int argc, const char **argv)
   arguments(argc, argv);
   
   // call function
-  otv::Init();
-  otv::world.Create(argc, argv);
+  otv::Init(argc, argv);
+  otv::Create(argc, argv);
   renderstart(otv::WINSIZE, meshfiles, "N/A");
   
   // exit

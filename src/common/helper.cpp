@@ -4,10 +4,19 @@
 # define MAGICKCORE_QUANTUM_DEPTH 16
 # define MAGICKCORE_HDRI_ENABLE 0
 # include <Magick++.h>
-// # ifndef MaxRGB
-// #  define MaxRGB QuantumRange
-// # endif
 #endif
+
+//! @name CreateOSPTex
+OSPTexture2D
+otv::ImageData::CreateOSPTex()
+{
+  OSPTexture2D osptex =
+    ospNewTexture2D(osp::vec2i{(int)width, (int)height}, 
+		    channel == 4 ? OSP_TEXTURE_RGBA8 : OSP_TEXTURE_RGB8,
+		    data.data(),
+		    OSP_DATA_SHARED_BUFFER);      
+  return osptex;
+}
 
 //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
 void otv::mouse2screen

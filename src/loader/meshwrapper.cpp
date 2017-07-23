@@ -71,26 +71,27 @@ otv::Mesh::TinyObjLoader::Clear()
 void
 otv::Mesh::SetTransform(const otv::mat4f& rotation)
 {
-  vec3f center = 0.5f * (bbox.upper + bbox.lower);
+  center = 0.5f * (bbox.upper + bbox.lower);
   //
   // initialize transform
-  //--- here vx, vy, vz are base vectors of the new coordinate
+  //
+  //--- here v[0], v[1], v[2] are base vectors of the new coordinate
   //--- thus they correspond to the 1st, 2nd & 3rd rows respectively
-  //--- example 1
+  //--- example: set value directly
   // transform.l.v[0] = vec3f(0.f, 0.f,-1.f);
   // transform.l.v[1] = vec3f(0.f, 1.f, 0.f);
   // transform.l.v[2] = vec3f(1.f, 0.f, 0.f);
   // transform.p      = vec3f(0.f, 0.f, 0.f);
-  //--- example 2
+  //--- example: set value using glm
   // otv::mat4f matrix = mat4f(1.0f);
   // matrix *= glm::rotate(glm::radians(90.f), vec3f(0.f, 0.f, 1.f));
   // matrix *= glm::translate(-center);
   //
   otv::mat4f matrix = rotation * glm::translate(-center);
-  transform.l = matrix;
-  transform.p = glm::column(matrix,3);
-  bbox.upper -= center;
-  bbox.lower -= center;
+  transform.l = mat3f(matrix);
+  transform.p = vec3f(glm::column(matrix,3));
+  std::cout << glm::to_string(transform.p) << std::endl;
+  std::cout << glm::to_string(vec3f(glm::column(matrix,3))) << std::endl;
 }
 
 bool
@@ -216,7 +217,6 @@ otv::Mesh::LoadFromFileObj
     materials[i].LoadMtl(tiny.materials[i], dpath);
   }
 
-  SetTransform(otv::mat4f(1.0f));
   return true;
 }
 

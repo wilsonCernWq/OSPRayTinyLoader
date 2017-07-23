@@ -29,107 +29,69 @@
     std::cout << std::endl;				\
   }
 #else
-# define DEBUG_VECTOR(n, t)                        \
-  static void debug(const cy::Point##n##t& m)  {;} \
+# define DEBUG_VECTOR(n, t)                             \
+  static void debug(const cy::Point##n##t& m)  {;}	\
   static void debug(const cy::Matrix##n##t& m) {;}
 #endif                                                     
-#define CAST_VECTOR(n, t)						\
-  static ospcommon::vec##n##t make_vec(const cy::Point##n##t& m) {	\
-    ospcommon::vec##n##t v;						\
-    for (int i = 0; i < n; ++i) {					\
-      v[i] = m[i];							\
-    }									\
-    return v;								\
-  }
-
-namespace cy {
-  typedef Point2<int> Point2i;
-  typedef Point3<int> Point3i;
-  typedef Point4<int> Point4i;
-  typedef Matrix2<int> Matrix2i;
-  typedef Matrix3<int> Matrix3i;
-  typedef Matrix4<int> Matrix4i;
-};
-typedef cy::Point2<int> cyPoint2i;
-typedef cy::Point3<int> cyPoint3i;
-typedef cy::Point4<int> cyPoint4i;
-typedef cy::Matrix2<int> cyMatrix2i;
-typedef cy::Matrix3<int> cyMatrix3i;
-typedef cy::Matrix4<int> cyMatrix4i;
-namespace otv 
-{
-  DEBUG_VECTOR(2,f);
-  DEBUG_VECTOR(3,f);
-  DEBUG_VECTOR(4,f);
-  DEBUG_VECTOR(2,i);
-  DEBUG_VECTOR(3,i);
-  DEBUG_VECTOR(4,i);
-  CAST_VECTOR(2,i);
-  CAST_VECTOR(3,i);
-  CAST_VECTOR(4,i);
-  CAST_VECTOR(2,f);
-  CAST_VECTOR(3,f);
-  CAST_VECTOR(4,f);
-};
-
-#define DEFINE_LINEAR_TYPES(N, T)			\
-  struct bbox##N##T { vec##N##T upper, lower; };	\
-  struct linear##N##T {					\
-    vec##N##T v[N];					\
-    linear##N##T() = default;				\
-    linear##N##T(const mat##N##T &m) {			\
-      for (int i = 0; i < N; ++i) {			\
-	v[i] = glm::column(m, i);			\
-      }							\
+#define CAST_VECTOR(n, t)				\
+  static ospcommon::vec##n##t				\
+  make_vec(const cy::Point##n##t& m)			\
+  {							\
+    ospcommon::vec##n##t v;				\
+    for (int i = 0; i < n; ++i) {			\
+      v[i] = m[i];					\
     }							\
-    linear##N##T& operator=(const mat##N##T &m) {	\
-      for (int i = 0; i < N; ++i) {			\
-	v[i] = glm::column(m, i);			\
-      }							\
-      return *this;					\
-    }							\
-  };						        \
-  struct affine##N##T {					\
-    mat##N##T l;					\
-    vec##N##T p;					\
+    return v;						\
+  }  
+#define DEFINE_MATH_TYPES(TYPE, N, T)			\
+  /* cyCodeBase */					\
+  namespace cy {					\
+    typedef Point##N<TYPE> Point##N##T;			\
+    typedef Matrix##N<TYPE> Matrix##N##T;		\
+  };							\
+  typedef cy::Point##N<TYPE> cyPoint##N##T;		\
+  typedef cy::Matrix##N<TYPE> cyMatrix##N##T;		\
+  namespace otv						\
+  {							\
+    DEBUG_VECTOR(N,T);					\
+    CAST_VECTOR(N,T);					\
+  };							\
+  /* glm */						\
+  namespace otv						\
+  {							\
+    typedef glm::tvec##N<TYPE> vec##N##T;		\
+    typedef glm::tmat##N##x##N<TYPE> mat##N##T;		\
+    struct bbox##N##T { vec##N##T upper, lower; };	\
+    struct affine##N##T {				\
+      union { mat##N##T rotation; mat##N##T l; };	\
+      union { vec##N##T translation; vec##N##T p; };	\
+      affine##N##T() :					\
+        p(vec##N##T(0.0f)),				\
+	l(mat##N##T(1.0f))				\
+	{}  						\
+    };							\
   };
 
-#define DEFINE_MATH_TYPES(type, t)		\
-  typedef glm::tvec2<type> vec2##t;		\
-  typedef glm::tvec3<type> vec3##t;		\
-  typedef glm::tvec4<type> vec4##t;		\
-  typedef glm::tmat2x2<type> mat2##t;		\
-  typedef glm::tmat3x3<type> mat3##t;		\
-  typedef glm::tmat4x4<type> mat4##t;		\
-  DEFINE_LINEAR_TYPES(2, t)			\
-  DEFINE_LINEAR_TYPES(3, t)			\
-  DEFINE_LINEAR_TYPES(4, t)
-  
-namespace otv
-{
-  DEFINE_MATH_TYPES(int,    i);
-  DEFINE_MATH_TYPES(float,  f);
-  DEFINE_MATH_TYPES(double, d);  
-};
+#define DEFINE_ALL_TYPES(type, t)			\
+  DEFINE_MATH_TYPES(type, 2, t)				\
+  DEFINE_MATH_TYPES(type, 3, t)				\
+  DEFINE_MATH_TYPES(type, 4, t)
+
+// define all types
+DEFINE_ALL_TYPES(int,    i);
+DEFINE_ALL_TYPES(float,  f);
+DEFINE_ALL_TYPES(double, d);
 
 namespace otv 
-{
+{  
   struct ImageData {
     std::vector<unsigned char> data;
     unsigned int width = 0, height = 0, depth = 0;
     unsigned int channel = 0;
     bool IsEmpty() { return (width * height) <= 0; }
     vec2i Size() { return vec2i(width, height); }
-    OSPTexture2D CreateOSPTex() {
-      OSPTexture2D osptex =
-	ospNewTexture2D(osp::vec2i{(int)width, (int)height}, 
-			channel == 4 ? OSP_TEXTURE_RGBA8 : OSP_TEXTURE_RGB8,
-			data.data(),
-			OSP_DATA_SHARED_BUFFER);      
-      return osptex;
-    };
+    OSPTexture2D CreateOSPTex();
   };
-
   //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
   void mouse2screen(int x, int y, float width, float height, cy::Point2f& p);
 

@@ -18,15 +18,17 @@ namespace otv {
 	vec3f T;
       };
       union { // not supported yet
-	vec3f rotation;
-	vec3f R;
+	mat3f rotation;
+	mat3f R;
       };
       bbox3f bbox; // manually define bounding box
       SgObject(otv::Mesh& m) {
-	mesh       = &m;
+	mesh       = &m;	
 	filename   = m.GetFullPath();
 	bbox.upper = m.GetBBoxMax();
 	bbox.lower = m.GetBBoxMin();
+	T = m.GetTransform().p;
+	R = m.GetTransform().l;
       }
     };
     struct SgCamera {

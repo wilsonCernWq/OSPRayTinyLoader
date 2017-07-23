@@ -63,20 +63,4 @@ static inline void _glCheckError
 # define check_error_gl() ((void)0)
 #endif
 
-namespace otv 
-{
-  void KeyboardAction(int key, int x, int y);
-  void MouseAction(int button, int state, int x, int y);
-  void GetNormalKeys(unsigned char key, GLint x, GLint y);
-  void GetSpecialKeys(int key, GLint x, GLint y);
-  void GetMouseButton(GLint button, GLint state, GLint x, GLint y);
-  void GetMousePosition(GLint x, GLint y);
-  void OpenGLCreateSystem(int argc, const char **argv);
-  void OpenGLStartSystem();
-  void OpenGLRender();
-  void Init();
-  void Idle();
-
-};
-
 #endif//_GLUT_BINDING_H_

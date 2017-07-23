@@ -45,8 +45,11 @@ namespace otv {
       void Clear();
     };
     TinyObjLoader tiny;
-    bbox3f bbox; // mesh bounding box
+    /* geometric data */
+    vec3f center; // mesh center coordinate in world
+    bbox3f bbox;  // mesh bounding box in world
     affine3f transform;
+    /* meta data */
     std::string dpath; // directory path to the mesh folder
     std::string fpath; // directory path to the mesh folder
     std::string fname; // filename of the mesh
@@ -62,11 +65,11 @@ namespace otv {
     }
     vec3f GetBBoxMax()
     {
-      return bbox.upper;
+      return bbox.upper - center;
     }
     vec3f GetBBoxMin()
     {
-      return bbox.lower;
+      return bbox.lower - center;
     }
     vec3f GetCenter() 
     {
@@ -76,7 +79,11 @@ namespace otv {
     {
       return glm::length(GetBBoxMax() - GetBBoxMin());
     }
-    void SetTransform(const otv::mat4f& matrix);
+    affine3f GetTransform()
+    {
+      return transform;
+    }
+    void SetTransform(const otv::mat4f&);
     /** 
      * \brief Overriding LoadFromFileObj function for TriMesh,
      *  force to triangulate

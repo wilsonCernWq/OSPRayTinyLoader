@@ -15,6 +15,7 @@ namespace otv {
     enum RENDERTYPE {SCIVIS, PATHTRACER};    
   private:
     // parameters
+    bool initialized;
     vec2i winsize;
     bbox3f bbox;
     uint32_t* fb;
@@ -30,27 +31,54 @@ namespace otv {
     /** \brief Create objects */
     void CreateFrameBuffer(const vec2i& newsize);
     void CreateModel();
-    void CreateRenderer(RENDERTYPE renderType);    
+    void CreateRenderer(RENDERTYPE renderType);
   public:
     World();
     ~World() { Clean(); }
     /** \brief Access OSPRay objects */
-    Light& GetLight() { return this->light; }
+    Light&  GetLight() { return this->light; }
     Camera& GetCamera() { return this->camera; }
+    /** \brief Retrieve the pointers to mesh */
     std::vector<otv::Mesh*>& GetMeshes() { return this->objects; }
     /** \brief Retrieve the rendered framebuffer data*/
-    uint32_t* GetImageData() { return fb; }
+    uint32_t* GetImageData() { return fb; }   
     /** \brief Initialize ospray */
-    void Init(const vec2i& newsize, RENDERTYPE renderType,
-	      std::vector<otv::Mesh*>& meshes);
     void Create(int argc, const char **argv);
-    void Start();
+    void Start(const vec2i& newsize, RENDERTYPE renderType,
+	       std::vector<otv::Mesh*>& meshes);
     void Render();
     void Clean();
     void ClearFrame();
-    /** \brief two function pointers to create OpenGL */
-    void (*OpenGLCreate)(int argc, const char **argv);
+    /** \brief Function pointer for creating OpenGL */
     void (*OpenGLStart)();
+    /** \brief Helper functions to make the interface easier */
+    void ZoomIn() {
+      GetCamera().SetZoomIn();
+      GetCamera().Update();
+      ClearFrame();    
+    }
+    void ZoomOut() {
+      GetCamera().SetZoomOut();
+      GetCamera().Update();
+      ClearFrame();    
+    }
+    void BeginDragCamera(float x, float y) {
+      GetCamera().BeginDrag(x, y);
+    }
+    void BeginDragLights(float x, float y) {
+      GetLight().GetDirLight().BeginDrag(x, y);	
+    }
+    void DragCamera(float x, float y) {
+      GetCamera().Drag(x, y);
+      GetCamera().Update();
+      ClearFrame();
+    }
+    void DragLights(float x, float y) {
+      GetLight().GetDirLight().Drag(x, y);
+      GetLight().Update();
+      GetCamera().Update();
+      ClearFrame();
+    }
 
   };
 };

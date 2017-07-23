@@ -2,7 +2,11 @@
 #include <limits>
 #include <glm/gtx/norm.hpp>
  
-otv::World::World() : winsize (0), fb (nullptr) {}
+otv::World::World() :
+  winsize (0),
+  fb (nullptr),
+  initialized(false)
+{}
 
 void
 otv::World::Clean()
@@ -93,12 +97,15 @@ otv::World::CreateRenderer(RENDERTYPE renderType)
 }
 
 void
-otv::World::Init
+otv::World::Start
 (const vec2i& newsize, RENDERTYPE renderType, std::vector<otv::Mesh*>& meshes)
 {
+  // set window size
+  initialized = true;
   winsize = newsize;
   bbox.upper = vec3f(std::numeric_limits<float>::min());
   bbox.lower = vec3f(std::numeric_limits<float>::max());
+
   // create world & renderer
   CreateModel();
   CreateRenderer(renderType);
@@ -136,7 +143,7 @@ otv::World::Init
   // light
   light.Init(osprenderer);
       
-  //! register lights
+  // register lights
   ospSetObject(osprenderer, "model", ospmodel);
   ospSetObject(osprenderer, "lights", light.GetOSPLights());
   ospSetObject(osprenderer, "camera", camera.GetOSPCamera());
@@ -144,19 +151,15 @@ otv::World::Init
 
   // commit
   ospCommit(osprenderer);
+
+  // start window
+  OpenGLStart();
 }
 
 void
 otv::World::Create(int argc, const char **argv)
 {      
-  OpenGLCreate(argc, argv); // initialize openGL 
   ospInit(&argc, argv); // setting up ospray
-}
-
-void
-otv::World::Start()
-{
-  OpenGLStart();
 }
 
 void
