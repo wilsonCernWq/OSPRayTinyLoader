@@ -68,6 +68,31 @@ otv::Mesh::TinyObjLoader::Clear()
   materials.clear();
 }
 
+void
+otv::Mesh::SetTransform(const otv::mat4f& rotation)
+{
+  vec3f center = 0.5f * (bbox.upper + bbox.lower);
+  //
+  // initialize transform
+  //--- here vx, vy, vz are base vectors of the new coordinate
+  //--- thus they correspond to the 1st, 2nd & 3rd rows respectively
+  //--- example 1
+  // transform.l.v[0] = vec3f(0.f, 0.f,-1.f);
+  // transform.l.v[1] = vec3f(0.f, 1.f, 0.f);
+  // transform.l.v[2] = vec3f(1.f, 0.f, 0.f);
+  // transform.p      = vec3f(0.f, 0.f, 0.f);
+  //--- example 2
+  // otv::mat4f matrix = mat4f(1.0f);
+  // matrix *= glm::rotate(glm::radians(90.f), vec3f(0.f, 0.f, 1.f));
+  // matrix *= glm::translate(-center);
+  //
+  otv::mat4f matrix = rotation * glm::translate(-center);
+  transform.l = matrix;
+  transform.p = glm::column(matrix,3);
+  bbox.upper -= center;
+  bbox.lower -= center;
+}
+
 bool
 otv::Mesh::LoadFromFileObj
 (const char* filename, bool loadMtl)
@@ -191,25 +216,11 @@ otv::Mesh::LoadFromFileObj
     materials[i].LoadMtl(tiny.materials[i], dpath);
   }
 
-  // initialize transform
-  //--- here vx, vy, vz are base vectors of the new coordinate
-  //--- thus they correspond to the 1st, 2nd & 3rd rows respectively
-  // transform.l.v[0] = vec3f(0.f, 0.f,-1.f);
-  // transform.l.v[1] = vec3f(0.f, 1.f, 0.f);
-  // transform.l.v[2] = vec3f(1.f, 0.f, 0.f);
-  // transform.p    = vec3f(0.f, 0.f, 0.f);
-  vec3f center = 0.5f * (bbox.upper + bbox.lower);
-  mat4f matrix = mat4f(1.0f);
-  matrix *= glm::translate(-center);
-  matrix *= glm::rotate(glm::radians(90.f), vec3f(0.f, 0.f, 1.f));
-  transform.l = matrix;
-  transform.p = center * transform.l;
-  bbox.upper -= center;
-  bbox.lower -= center;
+  SetTransform(otv::mat4f(1.0f));
   return true;
 }
 
-void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer) 
+void otv::Mesh::AddToModel(OSPModel& model, OSPRenderer& renderer)
 {
   for (auto& geo : geometries)
   {    

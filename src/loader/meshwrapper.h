@@ -76,6 +76,7 @@ namespace otv {
     {
       return glm::length(GetBBoxMax() - GetBBoxMin());
     }
+    void SetTransform(const otv::mat4f& matrix);
     /** 
      * \brief Overriding LoadFromFileObj function for TriMesh,
      *  force to triangulate
