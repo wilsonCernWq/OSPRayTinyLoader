@@ -11,6 +11,7 @@ namespace otv
   /* global objects */  
   World world; 
   std::vector<Mesh*> meshes;
+  SceneGraph sg;
   
   /* global parameters */  
   bool  NOWIN = false;

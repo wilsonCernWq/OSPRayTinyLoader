@@ -90,8 +90,6 @@ otv::Mesh::SetTransform(const otv::mat4f& rotation)
   otv::mat4f matrix = rotation * glm::translate(-center);
   transform.l = mat3f(matrix);
   transform.p = vec3f(glm::column(matrix,3));
-  std::cout << glm::to_string(transform.p) << std::endl;
-  std::cout << glm::to_string(vec3f(glm::column(matrix,3))) << std::endl;
 }
 
 bool

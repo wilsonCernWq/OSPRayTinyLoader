@@ -11,10 +11,17 @@ void renderstart
  const std::string bgmesh)
 {
   // register function handlers
-  otv::RegisterCleaner([=](){
-      std::cout << "[ospray] cleaning" << std::endl;
+  otv::RegisterCleaner([=]() {
+      
+      std::cout << "[scene graph]" << std::endl;
+      otv::sg.PullFromWorld();
+      otv::sg.Dump();
+      std::cout << "[scene graph]" << std::endl;
+      
+      std::cout << "[ospray] cleaning" << std::endl;      
       otv::world.Clean();
       for (auto& m : otv::meshes) { delete m; m = nullptr; }
+      
     });
   // geometry/volume
   otv::meshes.resize(files.size());
@@ -24,6 +31,7 @@ void renderstart
     otv::meshes[i]->SetTransform(otv::mat4f(1.0f)); // this should be called after loading
   }
   // world
+  otv::sg.SetWorld(otv::world);
   otv::world.Start(size, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
 }
 

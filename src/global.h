@@ -14,6 +14,7 @@ namespace otv
 
   extern World world;
   extern std::vector<Mesh*> meshes;
+  extern SceneGraph sg;
   
   /* global parameters */
 
