@@ -1,4 +1,5 @@
 #include "helper.h"
+#include <set>
 
 #ifdef USE_IMAGEMAGICK
 # define MAGICKCORE_QUANTUM_DEPTH 16
@@ -13,24 +14,20 @@ namespace otv {
 
 void otv::WarnAlways(std::string str)
 {
-  std::cerr << "\033[1;33m"
-	    << "[Warning] " << str
-	    << "\033[0m"
+  std::cerr << "\033[1;33m" << "[Warning] " << str << "\033[0m"
 	    << std::endl << std::endl;   
 }
 void otv::WarnOnce(std::string str)
 {
-  static bool warned = false;
-  if (!warned) {
+  static std::set<std::string> warned;
+  if (warned.find(str) == warned.end()) {
     otv::WarnAlways(str);
-    warned = true;
+    warned.insert(str);
   }
 }
 void otv::ErrorNoExit(std::string str)
 {
-  std::cerr << "\033[1;31m"
-	    << "[Error] " << str 
-	    << "\033[0m"
+  std::cerr << "\033[1;31m" << "[Error] " << str << "\033[0m"
 	    << std::endl << std::endl;
 }
 void otv::ErrorFatal(std::string str)

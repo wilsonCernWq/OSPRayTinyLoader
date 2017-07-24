@@ -115,7 +115,7 @@ namespace otv
   void writePPM
     (const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel);
 
-  //! function to create warning
+  //! function to create warning and error
   void WarnOnce(std::string str);
   void WarnAlways(std::string str);
   void ErrorNoExit(std::string str);
