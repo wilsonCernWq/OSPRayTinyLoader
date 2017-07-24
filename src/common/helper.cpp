@@ -6,6 +6,39 @@
 # include <Magick++.h>
 #endif
 
+namespace otv {
+  void loadimgActual
+  (ImageData& image, const char* filename, const std::string path);
+};
+
+void otv::WarnAlways(std::string str)
+{
+  std::cerr << "\033[1;33m"
+	    << "[Warning] " << str
+	    << "\033[0m"
+	    << std::endl << std::endl;   
+}
+void otv::WarnOnce(std::string str)
+{
+  static bool warned = false;
+  if (!warned) {
+    otv::WarnAlways(str);
+    warned = true;
+  }
+}
+void otv::ErrorNoExit(std::string str)
+{
+  std::cerr << "\033[1;31m"
+	    << "[Error] " << str 
+	    << "\033[0m"
+	    << std::endl << std::endl;
+}
+void otv::ErrorFatal(std::string str)
+{
+  otv::ErrorNoExit(str);
+  exit(EXIT_FAILURE); 
+}
+
 //! @name CreateOSPTex
 OSPTexture2D
 otv::ImageData::CreateOSPTex()

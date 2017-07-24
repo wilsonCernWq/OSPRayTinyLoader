@@ -83,8 +83,10 @@ DEFINE_ALL_TYPES(float,  f);
 DEFINE_ALL_TYPES(double, d);
 
 namespace otv 
-{  
-  struct ImageData {
+{
+  //! @name ImageData structure to store an loaded image
+  struct ImageData
+  {
     std::vector<unsigned char> data;
     unsigned int width = 0, height = 0, depth = 0;
     unsigned int channel = 0;
@@ -92,32 +94,32 @@ namespace otv
     vec2i Size() { return vec2i(width, height); }
     OSPTexture2D CreateOSPTex();
   };
-  //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
-  void mouse2screen(int x, int y, float width, float height, cy::Point2f& p);
-
+  
   //! @name load file into string
   std::string loadfile
     (const char *filename, std::ostream *outStream = &std::cout);
 
+  //! @name loadimg  
+  void loadimg
+    (ImageData& image, const std::string filename, const std::string path);
+  void loadimg
+    (ImageData& image, const char* filename, const std::string path);
+
+  //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
+  void mouse2screen(int x, int y, float width, float height, cy::Point2f& p);
+
   //! @name copychar: copy string data to char pointer
   void copychar(char * &str, const std::string& src, int start = 0);
 
-  //! @name loadimg
-  void loadimgActual
-    (ImageData& image, const char* filename, const std::string path);
-
-  void loadimg
-    (ImageData& image, const std::string filename, const std::string path);
-
-  void loadimg
-    (ImageData& image, const char* filename, const std::string path);
-
   //! @name writePPM Helper function to write the rendered image as PPM file
   void writePPM
-    (const char *fileName, 
-     const ospcommon::vec2i &size, 
-     const uint32_t *pixel);
+    (const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel);
 
+  //! function to create warning
+  void WarnOnce(std::string str);
+  void WarnAlways(std::string str);
+  void ErrorNoExit(std::string str);
+  void ErrorFatal(std::string str);
 };
 
 #endif//_HELPER_H_

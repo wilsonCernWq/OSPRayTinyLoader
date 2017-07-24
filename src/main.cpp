@@ -25,9 +25,12 @@ void renderstart
     });
   // geometry/volume
   otv::meshes.resize(files.size());
-  for (size_t i = 0; i < files.size(); ++i) {
+  for (size_t i = 0; i < files.size(); ++i)
+  {
     otv::meshes[i] = new otv::Mesh();
-    otv::meshes[i]->LoadFromFileObj(files[i].c_str());
+    if (!otv::meshes[i]->LoadFromFileObj(files[i].c_str())) {
+      otv::ErrorFatal("Fatal error, terminating the program ...");
+    }
     otv::meshes[i]->SetTransform(otv::mat4f(1.0f)); // this should be called after loading
   }
   // world

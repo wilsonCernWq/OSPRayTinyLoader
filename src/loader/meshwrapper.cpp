@@ -108,7 +108,7 @@ otv::Mesh::LoadFromFileObj
 				  fpath.c_str(),
 				  dpath == "" ? nullptr : dpath.c_str(),
 				  true);
-  if (!tiny.err.empty()) { std::cerr << tiny.err << std::endl; }
+  if (!tiny.err.empty()) { otv::ErrorNoExit(tiny.err); }
   if (!succeed) { return false; }
 
   // initialize bounding box
@@ -134,7 +134,9 @@ otv::Mesh::LoadFromFileObj
     }
     else
     {
-      std::cerr << "[Warning] found one shape with no faces" << std::endl;
+      otv::WarnAlways("shape #" +
+		      std::to_string(s) +
+		      "found one shape with no faces");
     }
     
     size_t vidx_offset = 0;
@@ -142,15 +144,9 @@ otv::Mesh::LoadFromFileObj
     {      
       // number of vertices of this face
       int fv = tiny.shapes[s].mesh.num_face_vertices[f]; 
-      if (fv != 3)
-      {
-	static bool warned = false;
-	if (!warned) {
-	  std::cerr << "[Error] this mesh is not a pure trianglar mesh"
-		    << std::endl;
-	  warned = true;
-	}
-	exit(EXIT_FAILURE); 
+      if (fv != 3) {
+	otv::ErrorNoExit("this mesh is not a pure trianglar mesh");
+	return false;
       }	
 
       // Loop over vertices in the face.
@@ -166,7 +162,7 @@ otv::Mesh::LoadFromFileObj
 	geo.vertex.push_back(vz);
 	bbox.upper = glm::max(bbox.upper, vec3f(vx, vy, vz));
 	bbox.lower = glm::min(bbox.lower, vec3f(vx, vy, vz));
-	  
+	// check normal
 	if (idx.normal_index >= 0)
 	{
 	  geo.has_normal = true;
@@ -177,16 +173,8 @@ otv::Mesh::LoadFromFileObj
 	  geo.normal.push_back(ny);
 	  geo.normal.push_back(nz);
 	} 
-	else
-	{
-	  static bool warned = false;
-	  geo.has_normal = false;
-	  if (!warned) {
-	    std::cerr << "[Warning] normal not found" << std::endl;
-	    warned = true;
-	  }
-	}
-	  
+	else { otv::WarnOnce("normal not found"); }
+	// check texture coordinate
 	if (idx.texcoord_index >= 0)
 	{
 	  geo.has_texcoord = true;
@@ -195,15 +183,7 @@ otv::Mesh::LoadFromFileObj
 	  geo.texcoord.push_back(tx);
 	  geo.texcoord.push_back(ty);
 	}
-	else
-	{
-	  static bool warned = false;
-	  geo.has_texcoord = false;
-	  if (!warned) {
-	    std::cerr << "[Warning] texture coordinate not found" << std::endl;
-	    warned = true;
-	  }
-	}
+	else { otv::WarnOnce("texture coordinate not found"); }
       }
       vidx_offset += fv;	
     }
