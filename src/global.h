@@ -5,9 +5,10 @@
 #include "common/helper.h"
 #include "loader/meshwrapper.h"
 #include "ospray/world.h"
-#include "sg/scenegraph.h"
 
-// Global Variables
+/* choose a JSON implementation */
+#include "sg/sgRapidJSON.h"
+
 namespace otv 
 {
   /* global objects */

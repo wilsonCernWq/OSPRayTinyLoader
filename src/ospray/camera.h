@@ -15,16 +15,20 @@ namespace otv {
     vec3f up    = vec3f(0.0f, 1.0f, 0.0f);
     vec3f dir = focus - pos;
     OSPCamera ospCam = nullptr;
+    /* cache */
+    vec3f currCamUp;
+    vec3f currCamDir;
+    vec3f currCamPos;
   public:
     Camera() = default;
     ~Camera() { Clean(); }
     
     OSPCamera& GetOSPCamera() { return ospCam; }
+    float GetZoom()  { return zoom; }
     vec3f GetFocus() { return focus; }
-    vec3f GetPos() { return pos; }
-    vec3f GetDir() { return dir; }
-    vec3f GetUp() { return up; }
-    float GetZoom() { return zoom; }
+    vec3f GetPos()   { return currCamPos; }
+    vec3f GetDir()   { return currCamDir; }
+    vec3f GetUp()    { return currCamUp; }
     
     void SetZoomIn() { this->zoom *= 0.9f; }
     void SetZoomOut() { this->zoom /= 0.9f; }

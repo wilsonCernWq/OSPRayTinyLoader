@@ -4,6 +4,9 @@
 
 #include "common/helper.h"
 
+// trying this obj loader https://github.com/syoyo/tinyobjloader
+#include "tiny_obj_loader.h"
+
 namespace otv {
   /** \brief structure for a triangular mesh */
   //! TODO: add support for more formats
@@ -73,7 +76,8 @@ namespace otv {
     }
     vec3f GetCenter() 
     {
-      return 0.5f * (GetBBoxMax() + GetBBoxMin());
+      center = 0.5f * (GetBBoxMax() + GetBBoxMin());
+      return center;
     }
     float GetDiagonalLength() 
     {

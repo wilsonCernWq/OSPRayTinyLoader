@@ -46,7 +46,7 @@ void otv::KeyboardAction(int key, int x, int y)
 }
 
 void otv::MouseAction(int button, int state, int x, int y) {
-  static cyPoint2f p;
+  static vec2f p;
   otv::mouse2screen(x, y, otv::WINSIZE.x, otv::WINSIZE.y, p);
   if (state == GLUT_UP) {
     if (button == GLUT_LEFT_BUTTON) {

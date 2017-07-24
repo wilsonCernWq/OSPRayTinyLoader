@@ -7,7 +7,32 @@
 #define _HELPER_H_
 
 #include "common.h"
-#include <glm/gtc/matrix_access.hpp>
+#include <vector>
+
+#if						\
+  defined(WIN32)  ||				\
+  defined(_WIN32) ||				\
+  defined(__WIN32) &&				\
+  !defined(__CYGWIN__)
+# include <windows.h>
+namespace otv {
+  inline std::string GetFullPath(const std::string& str) {
+    TCHAR full_path[MAX_PATH];    
+    GetFullPathName(_T(str.c_str()), MAX_PATH, full_path, NULL);
+    return std::string(full_path);
+  }
+};
+#else
+# include <limits.h>
+# include <stdlib.h>
+namespace otv {
+  inline std::string GetFullPath(const std::string& str) {
+    char full_path[PATH_MAX];
+    realpath(str.c_str(), full_path);
+    return std::string(full_path);
+  }
+};
+#endif
 
 #ifndef NDEBUG
 # define DEBUG_VECTOR(n, t)				\
@@ -34,6 +59,7 @@
   static void debug(const cy::Matrix##n##t& m) {;}
 #endif                                                     
 #define CAST_VECTOR(n, t)				\
+  /*							\
   static ospcommon::vec##n##t				\
   make_vec(const cy::Point##n##t& m)			\
   {							\
@@ -42,9 +68,11 @@
       v[i] = m[i];					\
     }							\
     return v;						\
-  }  
+  }							\
+  */
 #define DEFINE_MATH_TYPES(TYPE, N, T)			\
   /* cyCodeBase */					\
+  /*							\
   namespace cy {					\
     typedef Point##N<TYPE> Point##N##T;			\
     typedef Matrix##N<TYPE> Matrix##N##T;		\
@@ -56,6 +84,7 @@
     DEBUG_VECTOR(N,T);					\
     CAST_VECTOR(N,T);					\
   };							\
+  */							\
   /* glm */						\
   namespace otv						\
   {							\
@@ -106,7 +135,7 @@ namespace otv
     (ImageData& image, const char* filename, const std::string path);
 
   //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
-  void mouse2screen(int x, int y, float width, float height, cy::Point2f& p);
+  void mouse2screen(int x, int y, float width, float height, vec2f& p);
 
   //! @name copychar: copy string data to char pointer
   void copychar(char * &str, const std::string& src, int start = 0);
@@ -121,5 +150,11 @@ namespace otv
   void ErrorNoExit(std::string str);
   void ErrorFatal(std::string str);
 };
+
+#define HOLD \
+  otv::WarnAlways("Function '" + std::string(__func__) + "'" +	\
+		  " in file " + std::string(__FILE__) +		\
+		  " line " + std::to_string(__LINE__) +		\
+		  " is not being implemented yet")
 
 #endif//_HELPER_H_

@@ -1,6 +1,8 @@
 #include "helper.h"
 #include <set>
 
+// include image loader
+#include "lodepng.h"
 #ifdef USE_IMAGEMAGICK
 # define MAGICKCORE_QUANTUM_DEPTH 16
 # define MAGICKCORE_HDRI_ENABLE 0
@@ -50,10 +52,10 @@ otv::ImageData::CreateOSPTex()
 
 //! @name mouse2screen: convert mouse coordinate to [-1,1] * [-1,1]
 void otv::mouse2screen
-(int x, int y, float width, float height, cy::Point2f& p)
+(int x, int y, float width, float height, vec2f& p)
 {
-  p = cy::Point2f(2.0f * (float)x / width - 1.0f, 
-		  1.0f - 2.0f * (float)y / height);
+  p = vec2f(2.0f * (float)x / width - 1.0f, 
+	    1.0f - 2.0f * (float)y / height);
 }
 
 //! @name load file into string

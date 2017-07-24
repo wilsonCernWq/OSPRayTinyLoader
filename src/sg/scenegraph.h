@@ -8,8 +8,8 @@
 
 namespace otv {
   /** \brief structure to store object location in world coordinates */
-  class Mesh;
-  struct SceneGraph {
+  class SceneGraphAbstract {
+  public:
     struct SgObject {
       Mesh* mesh = nullptr;
       std::string filename;
@@ -22,14 +22,9 @@ namespace otv {
 	mat3f R;
       };
       bbox3f bbox; // manually define bounding box
-      SgObject(otv::Mesh& m) {
-	mesh       = &m;	
-	filename   = m.GetFullPath();
-	bbox.upper = m.GetBBoxMax();
-	bbox.lower = m.GetBBoxMin();
-	T = m.GetTransform().p;
-	R = m.GetTransform().l;
-      }
+      vec3f center; 
+      SgObject(otv::Mesh& m);
+      void SetObject(otv::Mesh& m);
     };
     struct SgCamera {
       Camera* camera;
@@ -39,33 +34,23 @@ namespace otv {
       vec3f up;
       float zoom;
       enum {PERSPECTIVE, ORTHOGRAPHIC} type; // not supported yet
-      void SetCamera(otv::Camera& c) {
-	camera = &c;
-	focus  = c.GetFocus();
-	pos    = c.GetPos();
-	dir    = c.GetDir();
-	up     = c.GetUp();
-	zoom   = c.GetZoom();
-      }
-    };
+      SgCamera() = default;
+      SgCamera(otv::Camera& c);
+      void SetCamera(otv::Camera& c);
+    };    
+  public: // this should be private, well ...
     std::vector<SgObject> objectsSg;
     SgCamera cameraSg;
-
+  protected:
     // associated pointer to the cpp class
-    otv::World* world_ptr = nullptr;
-
-    void SetWorld(otv::World& world) { world_ptr = &world; }
-    void PushToWorld() {}
-    void PullFromWorld() {
-      // camera
-      cameraSg.SetCamera(world_ptr->GetCamera());
-      // meshes
-      objectsSg.clear();
-      for (auto& m : world_ptr->GetMeshes()) {
-	objectsSg.emplace_back(*m);	
-      }
-    }
-    void Dump();
+    otv::World* world_ptr = nullptr; 
+  public:    
+    void SetWorld(otv::World& world);
+    void PushToWorld();
+    void PullFromWorld();
+    /* Implemented by different JSON implementations  */
+    virtual void Dump(const std::string& fname = "") = 0; 
+    virtual void Load(const std::string& fname = "") = 0;
   };
 };
 
