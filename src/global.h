@@ -5,7 +5,7 @@
 #include "common/helper.h"
 #include "loader/meshwrapper.h"
 #include "ospray/world.h"
-#include "scenegraph.h"
+#include "sg/scenegraph.h"
 
 // Global Variables
 namespace otv 

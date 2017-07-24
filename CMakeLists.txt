@@ -33,12 +33,13 @@ endif()
 #
 # include sources
 file(GLOB_RECURSE MAIN "src/main.cpp")
-file(GLOB_RECURSE CXX   "src/*.cpp")
+file(GLOB_RECURSE CXX  "src/*.cpp")
 file(GLOB_RECURSE COMMON_CXX "src/common/*.cpp")
 file(GLOB_RECURSE LOADER_CXX "src/loader/*.cpp")
 file(GLOB_RECURSE OPENGL_CXX "src/opengl/*.cpp")
 file(GLOB_RECURSE OSPRAY_CXX "src/ospray/*.cpp")
-foreach(f ${MAIN} ${COMMON_CXX} ${LOADER_CXX} ${OPENGL_CXX} ${OSPRAY_CXX})
+file(GLOB_RECURSE SG_CXX "src/sg/*.cpp")
+foreach(f ${MAIN} ${COMMON_CXX} ${LOADER_CXX} ${OPENGL_CXX} ${OSPRAY_CXX} ${SG_CXX})
   list(REMOVE_ITEM CXX ${f})
 endforeach()
 
@@ -54,8 +55,11 @@ target_link_libraries(osp_ospray osp_loader osp_common)
 add_library(osp_opengl SHARED ${OPENGL_CXX})
 target_link_libraries(osp_opengl osp_ospray osp_loader osp_common)
 
+add_library(osp_sg SHARED ${SG_CXX})
+target_link_libraries(osp_sg osp_opengl osp_ospray osp_loader osp_common)
+
 add_library(osp_glob SHARED ${CXX})
-target_link_libraries(osp_glob osp_opengl osp_ospray osp_loader osp_common)
+target_link_libraries(osp_glob osp_sg osp_opengl osp_ospray osp_loader osp_common)
 
 add_executable(loader ${MAIN})
 target_link_libraries(loader osp_glob)

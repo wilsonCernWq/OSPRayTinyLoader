@@ -2,9 +2,9 @@
 #ifndef _SCENEGRAPH_H_
 #define _SCENEGRAPH_H_
 
-#include "common/helper.h"
-#include "loader/meshwrapper.h"
-#include "ospray/world.h"
+#include "../common/helper.h"
+#include "../loader/meshwrapper.h"
+#include "../ospray/world.h"
 
 namespace otv {
   /** \brief structure to store object location in world coordinates */

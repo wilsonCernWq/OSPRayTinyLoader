@@ -1,10 +1,12 @@
 #include "scenegraph.h"
 
+#include <limits>
+#include <iostream>
+
+/* this is the file for the json implementation */
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include <limits>
-#include <iostream>
 
 using namespace rapidjson;
 
@@ -13,7 +15,8 @@ template<typename T>
 Value CreateVec(T vec, Document::AllocatorType& allocator)
 { 
   Value array(kArrayType);
-  for (int i = 0; i < vec.length(); ++i) {
+  for (int i = 0; i < vec.length(); ++i)
+  {
     array.PushBack(vec[i], allocator); // fluent API
   }
   return array;
