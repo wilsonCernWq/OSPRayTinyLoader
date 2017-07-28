@@ -15,7 +15,7 @@ void renderstart
       
       std::cout << "[scene graph]" << std::endl;
       otv::sg.PullFromWorld();
-      otv::sg.Dump();
+      otv::sg.Dump("example");
       std::cout << "[scene graph]" << std::endl;
       
       std::cout << "[ospray] cleaning" << std::endl;      
@@ -31,11 +31,13 @@ void renderstart
     if (!otv::meshes[i]->LoadFromFileObj(files[i].c_str())) {
       otv::ErrorFatal("Fatal error, terminating the program ...");
     }
-    otv::meshes[i]->SetTransform(otv::mat4f(1.0f)); // this should be called after loading
+    // this should be called after loading
+    otv::meshes[i]->SetTransform(otv::mat4f(1.0f)); 
   }
   // world
   otv::sg.SetWorld(otv::world);
-  otv::world.Start(size, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
+  otv::world.Init(size, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
+  otv::world.Start();
 }
 
 void help()
@@ -90,7 +92,6 @@ int main(int argc, const char **argv)
   arguments(argc, argv);
   
   // call function
-  otv::Init(argc, argv);
   otv::Create(argc, argv);
   renderstart(otv::WINSIZE, meshfiles, "N/A");
   

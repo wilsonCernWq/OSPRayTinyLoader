@@ -20,6 +20,7 @@ namespace otv
 
   /* global functions */
   void Create(int argc, const char **argv) {
+    otv::Init(argc, argv);
     otv::world.Create(argc, argv);
   };  
   void Clean() { for (auto& c : cleanlist) { c(); } }

@@ -97,7 +97,7 @@ otv::World::CreateRenderer(RENDERTYPE renderType)
 }
 
 void
-otv::World::Start
+otv::World::Init
 (const vec2i& newsize, RENDERTYPE renderType, std::vector<otv::Mesh*>& meshes)
 {
   // set window size
@@ -151,7 +151,11 @@ otv::World::Start
 
   // commit
   ospCommit(osprenderer);
+}
 
+void
+otv::World::Start()
+{
   // start window
   OpenGLStart();
 }

@@ -44,8 +44,9 @@ namespace otv {
     uint32_t* GetImageData() { return fb; }   
     /** \brief Initialize ospray */
     void Create(int argc, const char **argv);
-    void Start(const vec2i& newsize, RENDERTYPE renderType,
-	       std::vector<otv::Mesh*>& meshes);
+    void Init(const vec2i& newsize, RENDERTYPE renderType,
+	      std::vector<otv::Mesh*>& meshes);
+    void Start();
     void Render();
     void Clean();
     void ClearFrame();

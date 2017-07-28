@@ -1,6 +1,7 @@
 #include "sgRapidJSON.h"
 #include <limits>
 #include <iostream>
+#include <fstream>
 #include <glm/gtc/matrix_access.hpp>
 /* this is the file for the json implementation */
 #include "rapidjson/document.h"
@@ -32,10 +33,10 @@ CreateMeshObject
     Value filename;
     filename.SetString(otv::GetFullPath(self.filename).c_str(), alloc);
     obj.AddMember("file", filename, alloc);
-    obj.AddMember("translation", CreateVec(self.T, alloc), alloc);
-    obj.AddMember("rotation.vx", CreateVec(glm::column(self.R, 0), alloc), alloc);
-    obj.AddMember("rotation.vy", CreateVec(glm::column(self.R, 1), alloc), alloc);
-    obj.AddMember("rotation.vz", CreateVec(glm::column(self.R, 2), alloc), alloc);
+    obj.AddMember("translate", CreateVec(self.T, alloc), alloc);
+    obj.AddMember("rotate.vx", CreateVec(glm::column(self.R,0), alloc), alloc);
+    obj.AddMember("rotate.vy", CreateVec(glm::column(self.R,1), alloc), alloc);
+    obj.AddMember("rotate.vz", CreateVec(glm::column(self.R,2), alloc), alloc);
     obj.AddMember("bbox.upper",  CreateVec(self.bbox.upper, alloc), alloc);
     obj.AddMember("bbox.lower",  CreateVec(self.bbox.lower, alloc), alloc);
     obj.AddMember("center", CreateVec(self.center, alloc), alloc);
@@ -79,12 +80,17 @@ void otv::SgRapidJSON::Dump(const std::string& fname)
   // create JSON
   doc.AddMember("sg", CreateSingleSceneGraph(this, alloc), alloc);
 
-  // output
+  // get output string
   StringBuffer buffer;
   Writer<StringBuffer> writer(buffer);
   doc.Accept(writer);
   const char* output = buffer.GetString();
-  std::cout << buffer.GetString() << std::endl;
+
+  // print to file
+  std::ofstream myfile;
+  myfile.open((fname + ".json").c_str());
+  myfile << output << std::endl;;
+  myfile.close();
 }
 
 void otv::SgRapidJSON::Load(const std::string& fname)
