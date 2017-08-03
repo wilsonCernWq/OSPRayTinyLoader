@@ -6,21 +6,18 @@ static cyGLRenderBuffer2D gfb;
 static int mousebutton = -1; // GLUT_LEFT_BUTTON GLUT_RIGHT_BUTTON GLUT_MIDDLE_BUTTON
 static int mousestate  = GLUT_UP; // GLUT_UP GLUT_DOWN
 
-namespace otv 
-{
-  void KeyboardAction(int key, int x, int y);
-  void MouseAction(int button, int state, int x, int y);
-  void GetNormalKeys(unsigned char key, GLint x, GLint y);
-  void GetSpecialKeys(int key, GLint x, GLint y);
-  void GetMouseButton(GLint button, GLint state, GLint x, GLint y);
-  void GetMousePosition(GLint x, GLint y);
-  void OpenGLCreateSystem(int argc, const char **argv);
-  void OpenGLStartSystem();
-  void OpenGLRender();
-  void Idle();
-};
+void KeyboardAction(int key, int x, int y);
+void MouseAction(int button, int state, int x, int y);
+void GetNormalKeys(unsigned char key, GLint x, GLint y);
+void GetSpecialKeys(int key, GLint x, GLint y);
+void GetMouseButton(GLint button, GLint state, GLint x, GLint y);
+void GetMousePosition(GLint x, GLint y);
+void OpenGLCreateSystem(int argc, const char **argv);
+void OpenGLStartSystem();
+void OpenGLRender();
+void Idle();
 
-void otv::KeyboardAction(int key, int x, int y)
+void KeyboardAction(int key, int x, int y)
 {
   switch (key) {
   case 27:
@@ -35,58 +32,58 @@ void otv::KeyboardAction(int key, int x, int y)
     glutLeaveMainLoop();
     break;
   case (int)GLUT_KEY_UP:
-    world.ZoomIn();
+    otv::world.ZoomIn();
     break;
   case (int)GLUT_KEY_DOWN:
-    world.ZoomOut();
+    otv::world.ZoomOut();
     break;
   default:
     break;
   }
 }
 
-void otv::MouseAction(int button, int state, int x, int y) {
-  static vec2f p;
+void MouseAction(int button, int state, int x, int y) {
+  static otv::vec2f p;
   otv::mouse2screen(x, y, otv::WINSIZE.x, otv::WINSIZE.y, p);
   if (state == GLUT_UP) {
     if (button == GLUT_LEFT_BUTTON) {
-      world.BeginDragCamera(p[0], p[1]);	
+      otv::world.BeginDragCamera(p[0], p[1]);	
     } 
     else if (button == GLUT_RIGHT_BUTTON) {
-      world.BeginDragLights(p[0], p[1]);	
+      otv::world.BeginDragLights(p[0], p[1]);	
     }
   }
   else {
     if (button == GLUT_LEFT_BUTTON) {
-      world.DragCamera(p[0], p[1]);
+      otv::world.DragCamera(p[0], p[1]);
     } 
     else if (button == GLUT_RIGHT_BUTTON) {
-      world.DragLights(p[0], p[1]);
+      otv::world.DragLights(p[0], p[1]);
     }
   }
 }
 
-void otv::GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
+void GetMouseButton(GLint button, GLint state, GLint x, GLint y) {
   MouseAction(button, mousestate, x, y);
   mousebutton = button;
   mousestate = state;
 }
 
-void otv::GetMousePosition(GLint x, GLint y) {
+void GetMousePosition(GLint x, GLint y) {
   MouseAction(mousebutton, mousestate, x, y);
 }
 
-void otv::GetNormalKeys(unsigned char key, GLint x, GLint y) {
+void GetNormalKeys(unsigned char key, GLint x, GLint y) {
   KeyboardAction((int) key, x, y);
 }
 
-void otv::GetSpecialKeys(int key, GLint x, GLint y) {
+void GetSpecialKeys(int key, GLint x, GLint y) {
   KeyboardAction(key, x, y);
 }
 
-void otv::Idle() { glutPostRedisplay(); }
+void Idle() { glutPostRedisplay(); }
 
-void otv::OpenGLCreateSystem(int argc, const char **argv) {
+void OpenGLCreateSystem(int argc, const char **argv) {
   if (!otv::NOWIN) {
     glutInit(&argc, const_cast<char**>(argv));
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -102,9 +99,9 @@ void otv::OpenGLCreateSystem(int argc, const char **argv) {
   }
 }
 
-void otv::OpenGLStartSystem()
+void OpenGLStartSystem()
 {
-  if (!NOWIN) {    
+  if (!otv::NOWIN) {    
     gfb.Initialize(true, 4, otv::WINSIZE.x, otv::WINSIZE.y);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
     glDisable(GL_DEPTH_TEST);
@@ -119,15 +116,15 @@ void otv::OpenGLStartSystem()
   }
 }
 
-void otv::OpenGLRender()
+void OpenGLRender()
 {
-  if (!NOWIN) {
+    if (!otv::NOWIN) {
     otv::world.Render();
     // put framebuffer to screen
     gfb.BindTexture();
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		    GL_RGBA, GL_UNSIGNED_BYTE,
-		    world.GetImageData());
+		    otv::world.GetImageData());
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
     glBlitFramebuffer(0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		      0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
@@ -137,7 +134,18 @@ void otv::OpenGLRender()
 }
 
 // implementation of global function
-void otv::Init(int argc, const char **argv) {
-  world.OpenGLStart  = OpenGLStartSystem;
+void GLUT_Init(int argc, const char **argv) {
+  otv::world.OpenGLStart = OpenGLStartSystem;
   OpenGLCreateSystem(argc, argv);
 }
+bool GLUT_Setup() {
+    otv::Init = GLUT_Init;
+    return true;
+}
+
+namespace otv {
+    namespace GLUT {
+	bool initialized = GLUT_Setup();
+    };
+};
+

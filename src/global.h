@@ -26,8 +26,8 @@ namespace otv
   /* global functions */
 
   //! @name Initialize the whole syste,
-  //! this function should be defined by openGL backend
-  void Init(int argc, const char **argv);
+  //! every openGL implementation should implement this function if needed
+  extern void (*Init)(int argc, const char **argv);
 
   //! @name Create ospray and openGL contexts
   //! defined in global.cpp  

@@ -63,4 +63,10 @@ static inline void _glCheckError
 # define check_error_gl() ((void)0)
 #endif
 
+namespace otv {
+    namespace GLUT {
+	extern bool initialized; //! this is a dummy variable to initialize the module
+    };
+};
+
 #endif//_GLUT_BINDING_H_

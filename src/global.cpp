@@ -5,26 +5,29 @@
 // Local Variables
 static std::vector<std::function<void()>> cleanlist;
 
+void Dummy_Init(int argc, const char **argv) {}
+
 // Global Variables
 namespace otv
 {
-  /* global objects */  
-  World world; 
-  std::vector<Mesh*> meshes;
-  SceneGraph sg;
+    /* global objects */  
+    World world; 
+    std::vector<Mesh*> meshes;
+    SceneGraph sg;
   
-  /* global parameters */  
-  bool  NOWIN = false;
-  int   WINX = 0, WINY = 0;
-  vec2i WINSIZE = otv::vec2i(1024, 1024);
+    /* global parameters */  
+    bool  NOWIN = false;
+    int   WINX = 0, WINY = 0;
+    vec2i WINSIZE = otv::vec2i(1024, 1024);
 
-  /* global functions */
-  void Create(int argc, const char **argv) {
-    otv::Init(argc, argv);
-    otv::world.Create(argc, argv);
-  };  
-  void Clean() { for (auto& c : cleanlist) { c(); } }
-  void RegisterCleaner(std::function<void()> c) {
-    cleanlist.push_back(c);
-  }
+    /* global functions */
+    void (*Init)(int argc, const char **argv) = Dummy_Init;
+    void Create(int argc, const char **argv) {
+	otv::Init(argc, argv);
+	otv::world.Create(argc, argv);
+    };  
+    void Clean() { for (auto& c : cleanlist) { c(); } }
+    void RegisterCleaner(std::function<void()> c) {
+	cleanlist.push_back(c);
+    }
 };
