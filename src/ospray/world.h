@@ -14,11 +14,14 @@ namespace otv {
   public:
     enum RENDERTYPE {SCIVIS, PATHTRACER};    
   private:
-    // parameters
-    bool initialized;
+    // external parameters
     vec2i winsize;
-    bbox3f bbox;
+    bool  nowin;
+    // internal parameters
+    bool initialized;
+    bbox3f bbox;    
     uint32_t* fb;
+    // list of meshes contained inside the world
     std::vector<otv::Mesh*> objects;
     // ospray objects
     OSPModel       ospmodel       = nullptr;    
@@ -44,7 +47,9 @@ namespace otv {
     uint32_t* GetImageData() { return fb; }   
     /** \brief Initialize ospray */
     void Create(int argc, const char **argv);
-    void Init(const vec2i& newsize, RENDERTYPE renderType,
+    void Init(const vec2i& newsize, 
+	      const bool nowinmode,
+	      const RENDERTYPE renderType,
 	      std::vector<otv::Mesh*>& meshes);
     void Start();
     void Render();

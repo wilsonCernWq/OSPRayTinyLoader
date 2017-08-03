@@ -58,34 +58,7 @@ namespace otv {
   static void debug(const cy::Point##n##t& m)  {;}	\
   static void debug(const cy::Matrix##n##t& m) {;}
 #endif                                                     
-#define CAST_VECTOR(n, t)				\
-  /*							\
-  static ospcommon::vec##n##t				\
-  make_vec(const cy::Point##n##t& m)			\
-  {							\
-    ospcommon::vec##n##t v;				\
-    for (int i = 0; i < n; ++i) {			\
-      v[i] = m[i];					\
-    }							\
-    return v;						\
-  }							\
-  */
 #define DEFINE_MATH_TYPES(TYPE, N, T)			\
-  /* cyCodeBase */					\
-  /*							\
-  namespace cy {					\
-    typedef Point##N<TYPE> Point##N##T;			\
-    typedef Matrix##N<TYPE> Matrix##N##T;		\
-  };							\
-  typedef cy::Point##N<TYPE> cyPoint##N##T;		\
-  typedef cy::Matrix##N<TYPE> cyMatrix##N##T;		\
-  namespace otv						\
-  {							\
-    DEBUG_VECTOR(N,T);					\
-    CAST_VECTOR(N,T);					\
-  };							\
-  */							\
-  /* glm */						\
   namespace otv						\
   {							\
     typedef glm::tvec##N<TYPE> vec##N##T;		\
@@ -142,7 +115,11 @@ namespace otv
 
   //! @name writePPM Helper function to write the rendered image as PPM file
   void writePPM
-    (const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel);
+    (const char *fileName, const vec2i &size, const uint32_t *pixel);
+
+  //! @name writePPM Helper function to write the rendered image as PNG file
+  void writePNG
+    (const char* fileName, const vec2i &size, const uint32_t *pixel);
 
   //! function to create warning and error
   void WarnOnce(std::string str);

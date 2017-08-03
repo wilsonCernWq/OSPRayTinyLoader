@@ -3,9 +3,8 @@
 #include <glm/gtx/norm.hpp>
  
 otv::World::World() :
-  winsize (0),
-  fb (nullptr),
-  initialized(false)
+  winsize (0), nowin(true),
+  fb (nullptr), initialized(false)
 {}
 
 void
@@ -98,11 +97,15 @@ otv::World::CreateRenderer(RENDERTYPE renderType)
 
 void
 otv::World::Init
-(const vec2i& newsize, RENDERTYPE renderType, std::vector<otv::Mesh*>& meshes)
+(const vec2i& newsize, 
+ const bool nowinmode,
+ const RENDERTYPE renderType, 
+ std::vector<otv::Mesh*>& meshes)
 {
-  // set window size
+  // set parameters
   initialized = true;
   winsize = newsize;
+  nowin = nowinmode;
   bbox.upper = vec3f(std::numeric_limits<float>::min());
   bbox.lower = vec3f(std::numeric_limits<float>::max());
 
@@ -157,7 +160,15 @@ void
 otv::World::Start()
 {
   // start window
-  OpenGLStart();
+  if (!nowin) {
+    OpenGLStart();
+  }
+  else {
+    for (int i = 0; i < 100; ++i) { // hard-code max frame for now
+      Render();
+    }
+    otv::writePNG("example.png", winsize, fb);
+  }
 }
 
 void

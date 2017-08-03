@@ -139,13 +139,13 @@ void GLUT_Init(int argc, const char **argv) {
   OpenGLCreateSystem(argc, argv);
 }
 bool GLUT_Setup() {
-    otv::Init = GLUT_Init;
-    return true;
+  otv::Init = GLUT_Init;
+  return true;
 }
 
 namespace otv {
-    namespace GLUT {
-	bool initialized = GLUT_Setup();
-    };
+  namespace GLUT {
+    bool initialized = GLUT_Setup();
+  };
 };
 

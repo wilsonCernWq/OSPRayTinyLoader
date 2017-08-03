@@ -193,9 +193,8 @@ void otv::loadimg
 
 //! @name writePPM Helper function to write the rendered image as PPM file
 void otv::writePPM
-(const char *fileName, const ospcommon::vec2i &size, const uint32_t *pixel) 
+(const char *fileName, const otv::vec2i &size, const uint32_t *pixel) 
 {
-  using namespace ospcommon;
   FILE *file = fopen(fileName, "wb");
   fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
   unsigned char *out = (unsigned char *)alloca(3 * size.x);
@@ -211,4 +210,31 @@ void otv::writePPM
   }
   fprintf(file, "\n");
   fclose(file);
+}
+
+//! @name writePPM Helper function to write the rendered image as PNG file
+void otv::writePNG
+(const char* fileName, const otv::vec2i &size, const uint32_t *pixel)
+{
+  // parse pixel data
+  // const unsigned char* rgbarr = (const unsigned char *)pixel;
+  // std::vector<unsigned char> image(rgbarr, rgbarr + 4 * size.x * size.y);
+  std::vector<unsigned char> image;
+  for (int y = 0; y < size.y; y++) {
+    const unsigned char *in = 
+      (const unsigned char *)&pixel[(size.y - 1 - y)*size.x];
+    for (int x = 0; x < size.x; x++) {
+      image.push_back(in[4 * x + 0]);
+      image.push_back(in[4 * x + 1]);
+      image.push_back(in[4 * x + 2]);
+      image.push_back(in[4 * x + 3]);
+    }
+  }
+
+  // encode the image
+  unsigned error = lodepng::encode(fileName, image, size.x, size.y);
+
+  // if there's an error, display it
+  if (error)
+    otv::ErrorFatal(std::string("lodepng::") + lodepng_error_text(error));
 }
