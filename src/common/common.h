@@ -13,17 +13,6 @@
 // glm
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
-
-// include cyCodeBase here
-/* #include <cyCore.h> */
-/* #include <cyPoint.h> */
-/* #include <cyMatrix.h> */
-
-/* // include cpp standard library */
-/* #include <algorithm> */
-/* #include <iostream> */
-/* #include <limits> */
-/* #include <string> */
-/* #include <vector> */
+#include <glm/ext.hpp>
 
 #endif//_COMMON_H_

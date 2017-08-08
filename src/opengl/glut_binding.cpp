@@ -31,6 +31,12 @@ void KeyboardAction(int key, int x, int y)
     }
     glutLeaveMainLoop();
     break;
+  case (int)'D':
+  case (int)'d':
+    std::cout << "[scene graph] Dumping to example.json" << std::endl;
+    otv::sg.PullFromAll();
+    otv::sg.Dump("example");
+    break;  
   case (int)GLUT_KEY_UP:
     otv::world.ZoomIn();
     break;

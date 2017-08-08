@@ -54,6 +54,7 @@ namespace otv {
     mat4f Matrix() { return matrix; }
 
     void Reset() { matrix = mat4f(1.0f); }
+    void Reset(const mat4f& m) { matrix = m; }
 
   private:
     /**

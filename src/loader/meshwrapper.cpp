@@ -70,7 +70,7 @@ otv::Mesh::TinyObjLoader::Clear()
 }
 
 void
-otv::Mesh::SetTransform(const otv::mat4f& rotation)
+otv::Mesh::SetTransform()
 {
   center = 0.5f * (bbox.upper + bbox.lower);
   //
@@ -88,7 +88,15 @@ otv::Mesh::SetTransform(const otv::mat4f& rotation)
   // matrix *= glm::rotate(glm::radians(90.f), vec3f(0.f, 0.f, 1.f));
   // matrix *= glm::translate(-center);
   //
-  otv::mat4f matrix = rotation * glm::translate(-center);
+  otv::mat4f matrix = glm::translate(-center);
+  transform.l = mat3f(matrix);
+  transform.p = vec3f(glm::column(matrix,3));
+}
+
+void
+otv::Mesh::SetTransform(const otv::mat4f& matrix)
+{
+  center = 0.5f * (bbox.upper + bbox.lower);
   transform.l = mat3f(matrix);
   transform.p = vec3f(glm::column(matrix,3));
 }

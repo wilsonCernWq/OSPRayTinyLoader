@@ -24,16 +24,21 @@ namespace otv {
     ~Camera() { Clean(); }
     
     OSPCamera& GetOSPCamera() { return ospCam; }
+
     float GetZoom()  { return zoom; }
     vec3f GetFocus() { return focus; }
-    vec3f GetPos()   { return currCamPos; }
-    vec3f GetDir()   { return currCamDir; }
-    vec3f GetUp()    { return currCamUp; }
-    
-    void SetZoomIn() { this->zoom *= 0.9f; }
-    void SetZoomOut() { this->zoom /= 0.9f; }
-    void SetZoom(float zoom) { this->zoom = zoom; }
+    vec3f GetPos()   { return pos; }
+    vec3f GetDir()   { return dir; }
+    vec3f GetUp()    { return up; }
+
+    void SetZoom(float zoom)   { this->zoom = zoom; }
     void SetFocus(vec3f focus) { this->focus = focus; }
+    void SetPos(vec3f pos)     { this->pos = pos; }
+    void SetDir(vec3f dir)     { this->dir = dir; }
+    void SetUp(vec3f up)       { this->up = up; }
+    
+    void SetZoomIn()  { this->zoom *= 0.9f; }
+    void SetZoomOut() { this->zoom /= 0.9f; }
     
     void Update();
     void Init(vec2i size);

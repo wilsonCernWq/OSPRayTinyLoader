@@ -20,14 +20,17 @@ namespace otv {
       union { // not supported yet
 	mat3f rotation;
 	mat3f R;
+	vec3f Rv[3];
       };
       bbox3f bbox; // manually define bounding box
       vec3f center; 
+      SgObject() {};
       SgObject(otv::Mesh& m);
       void SetObject(otv::Mesh& m);
     };
     struct SgCamera {
       Camera* camera;
+      mat4f matrix;
       vec3f focus;
       vec3f dir;
       vec3f pos;
@@ -43,11 +46,14 @@ namespace otv {
     SgCamera cameraSg;
   protected:
     // associated pointer to the cpp class
+    std::vector<Mesh*>* mesh_ptr = nullptr; 
     otv::World* world_ptr = nullptr; 
   public:    
+    void SetMeshes(std::vector<Mesh*>& mesh);
     void SetWorld(otv::World& world);
+    void PushToMeshes();
     void PushToWorld();
-    void PullFromWorld();
+    void PullFromAll();
     /* Implemented by different JSON implementations  */
     virtual void Dump(const std::string& fname = "") = 0; 
     virtual void Load(const std::string& fname = "") = 0;

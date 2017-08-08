@@ -1,7 +1,8 @@
 #include "global.h"
 #include "opengl/glut_binding.h"
 
-//using namespace otv;
+bool scripting = false;
+std::string scriptfile;
 std::vector<std::string> meshfiles;
 
 void help()
@@ -43,6 +44,14 @@ void arguments(int argc, const char **argv)
     else if (arg.compare("-nw") == 0) {
       otv::NOWIN = true;
     }
+    else if (arg.compare("-s") == 0) {
+      scripting = true;
+      if (argc <= (i + 1)) {
+	otv::ErrorFatal("Not enough input");
+	help();
+      }
+      scriptfile = std::string(argv[++i]);
+    }
     else {
       meshfiles.push_back(arg);
     }     
@@ -58,23 +67,28 @@ int main(int argc, const char **argv)
     help();
   }
   arguments(argc, argv);
-  
+
+  //____________________________________________________________________
+  //
   // call function
   otv::Create(argc, argv);
 
   // register function handlers
   otv::RegisterCleaner([=]() {
-      
-      std::cout << "[scene graph]" << std::endl;
-      otv::sg.PullFromWorld();
-      otv::sg.Dump("example");
-      std::cout << "[scene graph]" << std::endl;
-      
+      // debug
+      otv::sg.PullFromAll();
+      otv::sg.Dump("compare");
+      // cleaning
       std::cout << "[ospray] cleaning" << std::endl;      
       otv::world.Clean();
-      for (auto& m : otv::meshes) { delete m; m = nullptr; }
-      
+      for (auto& m : otv::meshes) { delete m; m = nullptr; }      
     });
+  // SG
+  otv::sg.SetMeshes(otv::meshes);
+  otv::sg.SetWorld(otv::world);
+  if (scripting) {
+    otv::sg.Load(scriptfile);
+  }
   // geometry/volume
   otv::meshes.resize(meshfiles.size());
   for (size_t i = 0; i < meshfiles.size(); ++i)
@@ -84,13 +98,20 @@ int main(int argc, const char **argv)
       otv::ErrorFatal("Fatal error, terminating the program ...");
     }
     // this should be called after loading
-    otv::meshes[i]->SetTransform(otv::mat4f(1.0f)); 
+    otv::meshes[i]->SetTransform(); 
+  }
+  if (scripting) {
+    otv::sg.PushToMeshes();
   }
   // world
-  otv::sg.SetWorld(otv::world);
   otv::world.Init(otv::WINSIZE, otv::NOWIN, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
+  if (scripting) {
+    otv::sg.PushToWorld();
+  }
   otv::world.Start();
-  
+  //____________________________________________________________________
+  //
+
   // exit
   return EXIT_SUCCESS;
 }

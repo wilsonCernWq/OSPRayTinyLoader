@@ -88,6 +88,7 @@ namespace otv {
       return transform;
     }
     void SetTransform(const otv::mat4f&);
+    void SetTransform();
     /** 
      * \brief Overriding LoadFromFileObj function for TriMesh,
      *  force to triangulate

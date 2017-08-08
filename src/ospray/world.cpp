@@ -139,7 +139,7 @@ otv::World::Init
   std::cout << "[ospray] center: "
 	    << center.x << " " << center.y << " " << center.z
 	    << std::endl;
-  camera.SetFocus(center);
+  //camera.SetFocus(center);
   camera.SetZoom(zratio);
   camera.Init(winsize);
 
