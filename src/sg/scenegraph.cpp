@@ -1,5 +1,7 @@
 #include "scenegraph.h"
 
+//________________________________________________________________________________
+//
 otv::SceneGraphAbstract::SgObject::SgObject(otv::Mesh& m)
 {
   SetObject(m);
@@ -17,6 +19,8 @@ otv::SceneGraphAbstract::SgObject::SetObject(otv::Mesh& m)
   R = m.GetTransform().l;
 }
 
+//________________________________________________________________________________
+//
 otv::SceneGraphAbstract::SgCamera::SgCamera(otv::Camera& c)
 {
   SetCamera(c);
@@ -34,6 +38,41 @@ otv::SceneGraphAbstract::SgCamera::SetCamera(otv::Camera& c)
   zoom   = c.GetZoom();
 }
 
+//________________________________________________________________________________
+//
+otv::SceneGraphAbstract::SgLight::SgLight(otv::Light& l)
+{
+  SetLight(l);
+}
+
+void otv::SceneGraphAbstract::SgLight::SetLight(otv::Light& l)
+{
+  light = &l;
+  // ambient light
+  Iamb = l.GetAmbStrength();
+  Camb = l.GetAmbColor();
+  // directional light
+  Idir = l.GetDirStrength();
+  Cdir = l.GetDirColor();
+  Mdir = l.GetDirLight().Matrix();
+  Fdir = l.GetDirLight().GetF();
+  Udir = l.GetDirLight().GetU();
+  Pdir = l.GetDirLight().GetP();
+  Ddir = l.GetDirLight().GetD();
+  Zdir = l.GetDirLight().GetZoom();
+  // sun light
+  Isun = l.GetSunStrength();
+  Csun = l.GetSunColor();
+  Msun = l.GetSunLight().Matrix();
+  Fsun = l.GetSunLight().GetF();
+  Usun = l.GetSunLight().GetU();
+  Psun = l.GetSunLight().GetP();
+  Dsun = l.GetSunLight().GetD();
+  Zsun = l.GetSunLight().GetZoom();
+}
+
+//________________________________________________________________________________
+//
 void 
 otv::SceneGraphAbstract::SetMeshes(std::vector<Mesh*>& mesh)
 { mesh_ptr = &mesh; }
@@ -60,30 +99,41 @@ otv::SceneGraphAbstract::PushToMeshes()
     // std::cout << glm::to_string(matrix) << std::endl;
     (*mesh_ptr)[i]->SetTransform(matrix); 
   }
-  // HOLD;
 }
 
 void
 otv::SceneGraphAbstract::PushToWorld()
 {
-  world_ptr->GetCamera().Reset(cameraSg.matrix);
-  world_ptr->GetCamera().SetZoom(cameraSg.zoom);
-  world_ptr->GetCamera().SetFocus(cameraSg.focus);
-  world_ptr->GetCamera().SetPos(cameraSg.pos);
-  world_ptr->GetCamera().SetUp(cameraSg.up);
-  world_ptr->GetCamera().Update();
-  // std::cout << "[loading sg] mat  : " << glm::to_string(cameraSg.matrix) << std::endl
-  // 	    << "                    " << glm::to_string(world_ptr->GetCamera().Matrix()) << std::endl
-  // 	    << "[loading sg] zoom : " << cameraSg.zoom << std::endl
-  // 	    << "                    " << world_ptr->GetCamera().GetZoom() << std::endl
-  // 	    << "[loading sg] focus: " << glm::to_string(cameraSg.focus) << std::endl
-  // 	    << "                    " << glm::to_string(world_ptr->GetCamera().GetFocus()) << std::endl
-  // 	    << "[loading sg] pos  : " << glm::to_string(cameraSg.pos)   << std::endl
-  // 	    << "                    " << glm::to_string(world_ptr->GetCamera().GetPos()) << std::endl
-  // 	    << "[loading sg] dir  : " << glm::to_string(cameraSg.dir)   << std::endl
-  // 	    << "                    " << glm::to_string(world_ptr->GetCamera().GetDir()) << std::endl
-  // 	    << "[loading sg] up   : " << glm::to_string(cameraSg.up)    << std::endl
-  // 	    << "                    " << glm::to_string(world_ptr->GetCamera().GetUp()) << std::endl;
+  // camera
+  auto& c = world_ptr->GetCamera();
+  {
+    c.Reset(cameraSg.matrix);
+    c.SetZoom(cameraSg.zoom);
+    c.SetFocus(cameraSg.focus);
+    c.SetPos(cameraSg.pos);
+    c.SetUp(cameraSg.up);
+    c.Update();
+  }
+  // light
+  auto& l = world_ptr->GetLight();
+  {
+    // ambient light
+    l.SetAmbStrength(lightSg.Iamb);
+    l.SetAmbColor(lightSg.Camb);
+    // directional light
+    l.SetDirStrength(lightSg.Idir);
+    l.SetDirColor(lightSg.Cdir);
+    l.GetDirLight().Reset(lightSg.Mdir);
+    l.GetDirLight().Set(lightSg.Fdir, lightSg.Pdir, lightSg.Udir);
+    l.GetDirLight().SetZoom(lightSg.Zdir);
+    // sun light
+    l.SetSunStrength(lightSg.Isun);
+    l.SetSunColor(lightSg.Csun);
+    l.GetSunLight().Reset(lightSg.Msun);
+    l.GetSunLight().Set(lightSg.Fsun, lightSg.Psun, lightSg.Usun);
+    l.GetSunLight().SetZoom(lightSg.Zsun);
+    l.Update();
+  }
 }
 
 void
@@ -91,6 +141,8 @@ otv::SceneGraphAbstract::PullFromAll()
 {
   // camera
   cameraSg.SetCamera(world_ptr->GetCamera());
+  // light
+  lightSg.SetLight(world_ptr->GetLight());
   // meshes
   objectsSg.clear();
   for (auto& m : *mesh_ptr) {

@@ -33,10 +33,14 @@ void KeyboardAction(int key, int x, int y)
     break;
   case (int)'D':
   case (int)'d':
-    std::cout << "[scene graph] Dumping to example.json" << std::endl;
+    std::cout << "[scene graph] Dumping to current.json" << std::endl;
     otv::sg.PullFromAll();
-    otv::sg.Dump("example");
-    break;  
+    otv::sg.Dump("current");
+    break;
+  case (int)'S': // save screen shot	
+  case (int)'s': // save screen shot	
+    otv::writePNG("screenshot.png", otv::WINSIZE, otv::world.GetImageData());
+    break;
   case (int)GLUT_KEY_UP:
     otv::world.ZoomIn();
     break;

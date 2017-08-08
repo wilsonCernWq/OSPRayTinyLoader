@@ -25,8 +25,8 @@ namespace otv {
       bbox3f bbox; // manually define bounding box
       vec3f center; 
       SgObject() {};
-      SgObject(otv::Mesh& m);
-      void SetObject(otv::Mesh& m);
+      SgObject(otv::Mesh&);
+      void SetObject(otv::Mesh&);
     };
     struct SgCamera {
       Camera* camera;
@@ -38,12 +38,34 @@ namespace otv {
       float zoom;
       enum {PERSPECTIVE, ORTHOGRAPHIC} type; // not supported yet
       SgCamera() = default;
-      SgCamera(otv::Camera& c);
-      void SetCamera(otv::Camera& c);
-    };    
+      SgCamera(otv::Camera&);
+      void SetCamera(otv::Camera&);
+    };
+    struct SgLight {
+      Light* light;
+      // ambient light
+      float Iamb;
+      vec3f Camb;
+      // directional light
+      float Idir;
+      vec3f Cdir;
+      mat4f Mdir;
+      vec3f Fdir, Udir, Pdir, Ddir;
+      float Zdir;
+      // sun light
+      float Isun;
+      vec3f Csun;
+      mat4f Msun;
+      vec3f Fsun, Usun, Psun, Dsun;
+      float Zsun;
+      SgLight() = default;
+      SgLight(otv::Light&);
+      void SetLight(otv::Light&);
+    };
   public: // this should be private, well ...
     std::vector<SgObject> objectsSg;
     SgCamera cameraSg;
+    SgLight  lightSg;
   protected:
     // associated pointer to the cpp class
     std::vector<Mesh*>* mesh_ptr = nullptr; 

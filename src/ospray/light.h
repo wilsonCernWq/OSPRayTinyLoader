@@ -33,6 +33,19 @@ namespace otv {
     void Clean();
     void Update();
     void Init(OSPRenderer renderer);
+    /* for convenient */
+    float GetAmbStrength() { return Iamb; }
+    float GetDirStrength() { return Idir; }
+    float GetSunStrength() { return Isun; }
+    vec3f GetAmbColor() { return Camb; }
+    vec3f GetDirColor() { return Cdir; }
+    vec3f GetSunColor() { return Csun; }
+    void SetAmbStrength(float I) { Iamb = I; }
+    void SetDirStrength(float I) { Idir = I; }
+    void SetSunStrength(float I) { Isun = I; }
+    void SetAmbColor(vec3f c) { Camb = c; }
+    void SetDirColor(vec3f c) { Cdir = c; }
+    void SetSunColor(vec3f c) { Csun = c; }
   };
 };
 

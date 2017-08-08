@@ -81,6 +81,16 @@ namespace otv {
       cd = vec3f(Trackball::Matrix() * vec4f(d, 0.0f));
       cp = focus - cd * zoom;
     }
+    void Set(const vec3f& f, const vec3f& ip, const vec3f& iu)
+    {
+      focus = f; p = ip; u = iu; d = f-ip;
+    }
+    float GetZoom() { return zoom; }
+    vec3f GetF() { return focus; }
+    vec3f GetU() { return u; }
+    vec3f GetP() { return p; }
+    vec3f GetD() { return d; }
+    void SetZoom(float z) { zoom = z; }
   };
 
 };

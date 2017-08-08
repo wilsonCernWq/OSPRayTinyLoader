@@ -8,26 +8,6 @@ otv::World::World() :
 {}
 
 void
-otv::World::Clean()
-{
-  light.Clean();
-  camera.Clean();
-  if (this->ospframebuffer != nullptr) {    
-    ospUnmapFrameBuffer(this->fb, this->ospframebuffer);
-    ospFreeFrameBuffer(this->ospframebuffer);
-    this->ospframebuffer = nullptr;
-  }
-  if (this->ospmodel != nullptr) {
-    ospRelease(this->ospmodel);
-    this->ospmodel = nullptr;
-  }
-  if (this->osprenderer = nullptr) {
-    ospRelease(this->osprenderer);
-    this->osprenderer = nullptr;
-  }
-}
-
-void
 otv::World::CreateFrameBuffer(const vec2i& newsize)
 {
   if (ospframebuffer != nullptr) {
@@ -50,6 +30,12 @@ otv::World::CreateModel()
     ospmodel = nullptr;
   }
   this->ospmodel = ospNewModel();
+}
+
+void
+otv::World::Init(int argc, const char **argv)
+{      
+  ospInit(&argc, argv); // setting up ospray
 }
 
 void
@@ -172,9 +158,9 @@ otv::World::Start()
 }
 
 void
-otv::World::Init(int argc, const char **argv)
-{      
-  ospInit(&argc, argv); // setting up ospray
+otv::World::Render()
+{
+  ospRenderFrame(ospframebuffer, osprenderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 }
 
 void
@@ -184,7 +170,21 @@ otv::World::ClearFrame()
 }
 
 void
-otv::World::Render()
+otv::World::Clean()
 {
-  ospRenderFrame(ospframebuffer, osprenderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+  light.Clean();
+  camera.Clean();
+  if (this->ospframebuffer != nullptr) {    
+    ospUnmapFrameBuffer(this->fb, this->ospframebuffer);
+    ospFreeFrameBuffer(this->ospframebuffer);
+    this->ospframebuffer = nullptr;
+  }
+  if (this->ospmodel != nullptr) {
+    ospRelease(this->ospmodel);
+    this->ospmodel = nullptr;
+  }
+  if (this->osprenderer = nullptr) {
+    ospRelease(this->osprenderer);
+    this->osprenderer = nullptr;
+  }
 }

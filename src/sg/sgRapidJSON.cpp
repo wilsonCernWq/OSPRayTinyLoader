@@ -58,13 +58,58 @@ CreateSingleSceneGraph
     camera.AddMember("pos",   CreateVec(sg->cameraSg.pos,   alloc), alloc);
     camera.AddMember("up",    CreateVec(sg->cameraSg.up,    alloc), alloc);
     camera.AddMember("zoom",  sg->cameraSg.zoom, alloc);
-    camera.AddMember("matrix.vx", CreateVec(glm::column(sg->cameraSg.matrix,0), alloc), alloc);
-    camera.AddMember("matrix.vy", CreateVec(glm::column(sg->cameraSg.matrix,1), alloc), alloc);
-    camera.AddMember("matrix.vz", CreateVec(glm::column(sg->cameraSg.matrix,2), alloc), alloc);
-    camera.AddMember("matrix.vw", CreateVec(glm::column(sg->cameraSg.matrix,3), alloc), alloc);
+    camera.AddMember("matrix.vx",CreateVec(glm::column(sg->cameraSg.matrix,0),alloc),alloc);
+    camera.AddMember("matrix.vy",CreateVec(glm::column(sg->cameraSg.matrix,1),alloc),alloc);
+    camera.AddMember("matrix.vz",CreateVec(glm::column(sg->cameraSg.matrix,2),alloc),alloc);
+    camera.AddMember("matrix.vw",CreateVec(glm::column(sg->cameraSg.matrix,3),alloc),alloc);
   }
   root.AddMember("camera", camera, alloc);
 
+  // create light
+  Value light(kObjectType);
+  {
+    // ambient light
+    Value Lamb(kObjectType);
+    {
+      Lamb.AddMember("intensity", sg->lightSg.Iamb, alloc);
+      Lamb.AddMember("color", CreateVec(sg->lightSg.Camb, alloc), alloc);
+    }
+    light.AddMember("ambient", Lamb, alloc);    
+    // distant light
+    Value Ldir(kObjectType);
+    {
+      Ldir.AddMember("intensity", sg->lightSg.Idir, alloc);
+      Ldir.AddMember("color", CreateVec(sg->lightSg.Cdir, alloc), alloc);
+      Ldir.AddMember("matrix.vx",CreateVec(glm::column(sg->lightSg.Mdir,0),alloc),alloc);
+      Ldir.AddMember("matrix.vy",CreateVec(glm::column(sg->lightSg.Mdir,1),alloc),alloc);
+      Ldir.AddMember("matrix.vz",CreateVec(glm::column(sg->lightSg.Mdir,2),alloc),alloc);
+      Ldir.AddMember("matrix.vw",CreateVec(glm::column(sg->lightSg.Mdir,3),alloc),alloc);
+      Ldir.AddMember("focus", CreateVec(sg->lightSg.Fdir, alloc), alloc);
+      Ldir.AddMember("dir",   CreateVec(sg->lightSg.Ddir, alloc), alloc);
+      Ldir.AddMember("pos",   CreateVec(sg->lightSg.Pdir, alloc), alloc);
+      Ldir.AddMember("up",    CreateVec(sg->lightSg.Udir, alloc), alloc);
+      Ldir.AddMember("zoom", sg->lightSg.Zdir, alloc);      
+    }
+    light.AddMember("directional", Ldir, alloc);
+    // sun light
+    Value Lsun(kObjectType);
+    {
+      Lsun.AddMember("intensity", sg->lightSg.Isun, alloc);
+      Lsun.AddMember("color", CreateVec(sg->lightSg.Csun, alloc), alloc);
+      Lsun.AddMember("matrix.vx",CreateVec(glm::column(sg->lightSg.Msun,0),alloc),alloc);
+      Lsun.AddMember("matrix.vy",CreateVec(glm::column(sg->lightSg.Msun,1),alloc),alloc);
+      Lsun.AddMember("matrix.vz",CreateVec(glm::column(sg->lightSg.Msun,2),alloc),alloc);
+      Lsun.AddMember("matrix.vw",CreateVec(glm::column(sg->lightSg.Msun,3),alloc),alloc);
+      Lsun.AddMember("focus", CreateVec(sg->lightSg.Fsun, alloc), alloc);
+      Lsun.AddMember("dir",   CreateVec(sg->lightSg.Dsun, alloc), alloc);
+      Lsun.AddMember("pos",   CreateVec(sg->lightSg.Psun, alloc), alloc);
+      Lsun.AddMember("up",    CreateVec(sg->lightSg.Usun, alloc), alloc);
+      Lsun.AddMember("zoom", sg->lightSg.Zsun, alloc);      
+    }
+    light.AddMember("sun", Lsun, alloc);
+  }
+  root.AddMember("light", light, alloc);
+  
   // create mesh
   Value array(kArrayType);
   for (auto& m : sg->objectsSg) {
@@ -138,6 +183,37 @@ void otv::SgRapidJSON::Load(const std::string& fname)
   
   std::cout << "successful loading camera" << std::endl;
 
+  // parse light
+  // -- ambient
+  lightSg.Iamb = d["sg"]["light"]["ambient"]["intensity"].GetFloat();
+  lightSg.Camb = ReadVec3(d["sg"]["light"]["ambient"]["color"]);
+  // -- directional
+  lightSg.Idir = d["sg"]["light"]["directional"]["intensity"].GetFloat();
+  lightSg.Cdir = ReadVec3(d["sg"]["light"]["directional"]["color"]);
+  lightSg.Mdir = mat4f(ReadVec4(d["sg"]["light"]["directional"]["matrix.vx"]),
+		       ReadVec4(d["sg"]["light"]["directional"]["matrix.vy"]),
+		       ReadVec4(d["sg"]["light"]["directional"]["matrix.vz"]),
+		       ReadVec4(d["sg"]["light"]["directional"]["matrix.vw"]));
+  lightSg.Fdir = ReadVec3(d["sg"]["light"]["directional"]["focus"]);
+  lightSg.Udir = ReadVec3(d["sg"]["light"]["directional"]["up"]);
+  lightSg.Pdir = ReadVec3(d["sg"]["light"]["directional"]["pos"]);
+  lightSg.Ddir = ReadVec3(d["sg"]["light"]["directional"]["dir"]);
+  lightSg.Zdir = d["sg"]["light"]["directional"]["zoom"].GetFloat();	    
+  // -- sum
+  lightSg.Isun = d["sg"]["light"]["sun"]["intensity"].GetFloat();
+  lightSg.Csun = ReadVec3(d["sg"]["light"]["sun"]["color"]);
+  lightSg.Msun = mat4f(ReadVec4(d["sg"]["light"]["sun"]["matrix.vx"]),
+		       ReadVec4(d["sg"]["light"]["sun"]["matrix.vy"]),
+		       ReadVec4(d["sg"]["light"]["sun"]["matrix.vz"]),
+		       ReadVec4(d["sg"]["light"]["sun"]["matrix.vw"]));
+  lightSg.Fsun = ReadVec3(d["sg"]["light"]["sun"]["focus"]);
+  lightSg.Usun = ReadVec3(d["sg"]["light"]["sun"]["up"]);
+  lightSg.Psun = ReadVec3(d["sg"]["light"]["sun"]["pos"]);
+  lightSg.Dsun = ReadVec3(d["sg"]["light"]["sun"]["dir"]);
+  lightSg.Zsun = d["sg"]["light"]["sun"]["zoom"].GetFloat();	    
+
+  std::cout << "successful loading light" << std::endl;
+  
   // parse mesh
   for (auto& m : d["sg"]["meshes"].GetArray()) {
     objectsSg.emplace_back();
@@ -148,5 +224,4 @@ void otv::SgRapidJSON::Load(const std::string& fname)
     objectsSg.back().Rv[2] = ReadVec3(m["rotate.vz"]);
   }
   std::cout << "successful loading mesh" << std::endl;
-  // HOLD;
 }

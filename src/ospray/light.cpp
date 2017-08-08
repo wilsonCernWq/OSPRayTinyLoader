@@ -74,4 +74,3 @@ otv::Light::Clean() {
   if (ospDir != nullptr) { ospRelease(ospDir); ospDir = nullptr; }
   if (ospSun != nullptr) { ospRelease(ospSun); ospSun = nullptr; }
 }
-
