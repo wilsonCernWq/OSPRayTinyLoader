@@ -71,7 +71,7 @@ int main(int argc, const char **argv)
   //____________________________________________________________________
   //
   // call function
-  otv::Create(argc, argv);
+  otv::Init(argc, argv);
 
   // register function handlers
   otv::RegisterCleaner([=]() {
@@ -83,12 +83,14 @@ int main(int argc, const char **argv)
       otv::world.Clean();
       for (auto& m : otv::meshes) { delete m; m = nullptr; }      
     });
-  // SG
+
+  // load scenegraph from scratch
   otv::sg.SetMeshes(otv::meshes);
   otv::sg.SetWorld(otv::world);
   if (scripting) {
     otv::sg.Load(scriptfile);
   }
+  
   // geometry/volume
   otv::meshes.resize(meshfiles.size());
   for (size_t i = 0; i < meshfiles.size(); ++i)
@@ -103,8 +105,11 @@ int main(int argc, const char **argv)
   if (scripting) {
     otv::sg.PushToMeshes();
   }
+  
   // world
-  otv::world.Init(otv::WINSIZE, otv::NOWIN, otv::World::RENDERTYPE::PATHTRACER, otv::meshes);
+  otv::world.Create(otv::WINSIZE, otv::NOWIN,
+		    otv::World::RENDERTYPE::PATHTRACER,
+		    otv::meshes);  
   if (scripting) {
     otv::sg.PushToWorld();
   }

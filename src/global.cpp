@@ -21,11 +21,6 @@ namespace otv
   vec2i WINSIZE = otv::vec2i(1024, 1024);
   
   /* global functions */
-  void (*Init)(int argc, const char **argv) = Dummy_Init;
-  void Create(int argc, const char **argv) {
-    otv::Init(argc, argv);
-    otv::world.Create(argc, argv);
-  };  
   void Clean() { for (auto& c : cleanlist) { c(); } }
   void RegisterCleaner(std::function<void()> c) {
     cleanlist.push_back(c);

@@ -64,9 +64,10 @@ static inline void _glCheckError
 #endif
 
 namespace otv {
-  namespace {
-    extern bool initialized; //! this is a dummy variable to initialize the module
+  namespace GLUT {
+    void Init(int argc, const char **argv);
   };
+  const auto& Init = otv::GLUT::Init;
 };
 
 #endif//_GLUT_BINDING_H_

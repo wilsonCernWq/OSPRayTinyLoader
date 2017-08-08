@@ -96,7 +96,7 @@ otv::World::CreateRenderer(RENDERTYPE renderType)
 }
 
 void
-otv::World::Init
+otv::World::Create
 (const vec2i& newsize, 
  const bool nowinmode,
  const RENDERTYPE renderType, 
@@ -172,7 +172,7 @@ otv::World::Start()
 }
 
 void
-otv::World::Create(int argc, const char **argv)
+otv::World::Init(int argc, const char **argv)
 {      
   ospInit(&argc, argv); // setting up ospray
 }

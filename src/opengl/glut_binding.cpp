@@ -12,7 +12,7 @@ void GetNormalKeys(unsigned char key, GLint x, GLint y);
 void GetSpecialKeys(int key, GLint x, GLint y);
 void GetMouseButton(GLint button, GLint state, GLint x, GLint y);
 void GetMousePosition(GLint x, GLint y);
-void OpenGLCreateSystem(int argc, const char **argv);
+void OpenGLInitSystem(int argc, const char **argv);
 void OpenGLStartSystem();
 void OpenGLRender();
 void Idle();
@@ -89,7 +89,8 @@ void GetSpecialKeys(int key, GLint x, GLint y) {
 
 void Idle() { glutPostRedisplay(); }
 
-void OpenGLCreateSystem(int argc, const char **argv) {
+void OpenGLInitSystem(int argc, const char **argv)
+{
   if (!otv::NOWIN) {
     glutInit(&argc, const_cast<char**>(argv));
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -140,18 +141,10 @@ void OpenGLRender()
 }
 
 // implementation of global function
-void GLUT_Init(int argc, const char **argv) {
+void otv::GLUT::Init(int argc, const char **argv)
+{
+  std::cout << "[openGL] Initialization" << std::endl;
   otv::world.OpenGLStart = OpenGLStartSystem;
-  OpenGLCreateSystem(argc, argv);
-}
-bool GLUT_Setup() {
-  otv::Init = GLUT_Init;
-  return true;
-}
-
-namespace otv {
-  namespace GLUT {
-    bool initialized = GLUT_Setup();
-  };
+  OpenGLInitSystem(argc, argv);
+  otv::world.Init(argc, argv);
 };
-

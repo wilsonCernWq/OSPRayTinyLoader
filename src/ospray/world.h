@@ -46,11 +46,11 @@ namespace otv {
     /** \brief Retrieve the rendered framebuffer data*/
     uint32_t* GetImageData() { return fb; }   
     /** \brief Initialize ospray */
-    void Create(int argc, const char **argv);
-    void Init(const vec2i& newsize, 
-	      const bool nowinmode,
-	      const RENDERTYPE renderType,
-	      std::vector<otv::Mesh*>& meshes);
+    void Init(int argc, const char **argv);
+    void Create(const vec2i& newsize, 
+		const bool nowinmode,
+		const RENDERTYPE renderType,
+		std::vector<otv::Mesh*>& meshes);
     void Start();
     void Render();
     void Clean();

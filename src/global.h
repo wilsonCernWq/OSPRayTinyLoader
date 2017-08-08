@@ -12,26 +12,19 @@
 namespace otv 
 {
   /* global objects */
-
   extern World world;
   extern std::vector<Mesh*> meshes;
   extern SceneGraph sg;
   
   /* global parameters */
-
   extern bool  NOWIN;
   extern int   WINX, WINY;
   extern vec2i WINSIZE;
   
   /* global functions */
-
-  //! @name Initialize the whole syste,
-  //! every openGL implementation should implement this function if needed
-  extern void (*Init)(int argc, const char **argv);
-
   //! @name Create ospray and openGL contexts
-  //! defined in global.cpp  
-  void Create(int argc, const char **argv);
+  //! defined in openGL implementation
+  // void Init(int argc, const char **argv);
 
   //! @name Cleanup everything 
   //! defined in global.cpp  
