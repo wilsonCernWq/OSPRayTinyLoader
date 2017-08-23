@@ -24,6 +24,7 @@ MACRO(DeployRepo SRC DEST)
   ENDFOREACH()
 ENDMACRO(DeployRepo)
 #
+#
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 #
 # Setting up compiler
@@ -79,9 +80,16 @@ ELSE()
     MESSAGE(FATAL_ERROR " GLEW not found!")
 ENDIF()
 #
+#--- ospray
+#
+FIND_PACKAGE(ospray REQUIRED)
+INCLUDE_DIRECTORIES(${OSPRAY_INCLUDE_DIRS})
+MESSAGE(STATUS "OSPRay Include: ${OSPRAY_INCLUDE_DIRS}")
+MESSAGE(STATUS "OSPRay Libraries: ${OSPRAY_LIBRARIES}")
+#
 #--- add cyCodeBase (submodule)
 #   https://github.com/cemyuksel/cyCodeBase.git
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/cyCodeBase)
+# INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/cyCodeBase)
 #
 #--- lodePNG
 #   http://lodev.org/lodepng/
@@ -89,25 +97,18 @@ ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/external/lodepng)
 INCLUDE_DIRECTORIES(${LodePNG_INCLUDE_DIR})
 LIST(APPEND COMMON_LIBS ${LodePNG_LIBRARIES})
 #
-#--- ImGui
+#--- imgui
 #
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/imgui")
 LIST(APPEND COMMON_LIBS imgui)
 #
-#--- tiny obj loader
+#--- tiny OBJ loader
 #
-INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/tinyOBJloader")
+INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/tinyobjloader")
 #
 #--- glm
 #
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/glm")
-#
-#--- ospray
-#
-FIND_PACKAGE(ospray REQUIRED)
-INCLUDE_DIRECTORIES(${OSPRAY_INCLUDE_DIRS})
-MESSAGE(STATUS "OSPRay Include: ${OSPRAY_INCLUDE_DIRS}")
-MESSAGE(STATUS "OSPRay Libraries: ${OSPRAY_LIBRARIES}")
 #
 #--- image magick++
 #
