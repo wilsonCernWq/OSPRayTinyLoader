@@ -122,10 +122,10 @@ namespace otv
     (const char* fileName, const vec2i &size, const uint32_t *pixel);
 
   //! function to create warning and error
-  void WarnOnce(std::string str);
-  void WarnAlways(std::string str);
+  void WarnOnce   (std::string str);
+  void WarnAlways (std::string str);
   void ErrorNoExit(std::string str);
-  void ErrorFatal(std::string str);
+  void ErrorFatal (std::string str);
 };
 
 #define HOLD \

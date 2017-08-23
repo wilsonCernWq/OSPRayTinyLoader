@@ -113,7 +113,10 @@ void OpenGLInitSystem(int argc, const char **argv)
 void OpenGLStartSystem()
 {
   if (!otv::NOWIN) {    
+    std::cout << "[openGL] Initialize openGL framebuffer" << std::endl;
     gfb.Initialize(true, 4, otv::WINSIZE.x, otv::WINSIZE.y);
+    std::cout << "[openGL] Done openGL framebuffer" << std::endl;
+    
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
     glDisable(GL_DEPTH_TEST);
     glutDisplayFunc(OpenGLRender);

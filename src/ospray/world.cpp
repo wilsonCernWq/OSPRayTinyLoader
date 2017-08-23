@@ -70,9 +70,7 @@ otv::World::CreateRenderer(RENDERTYPE renderType)
     ospSetObject(osprenderer, "backplate", backplate_osp);
   }
   else {
-    std::cerr << "[Error] renderer type -- "
-	      << "The program is expected to crash soon!!!" << std::endl;
-    return;
+    otv::ErrorFatal("Undefined renderer type. The program is expected to crash soon!!!");
   }
   ospSet1i(osprenderer, "spp", 1);
   ospSet1i(osprenderer, "maxDepth", 10);

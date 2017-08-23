@@ -168,7 +168,7 @@ void otv::SgRapidJSON::Load(const std::string& fname)
   // parse into JSON
   Document d;
   d.Parse(contents.c_str());
-  std::cout << "successful loading" << std::endl;
+  std::cout << "[json] successful loading" << std::endl;
 
   // parse camera
   cameraSg.focus = ReadVec3(d["sg"]["camera"]["focus"]);
@@ -181,7 +181,7 @@ void otv::SgRapidJSON::Load(const std::string& fname)
 			  ReadVec4(d["sg"]["camera"]["matrix.vz"]),
 			  ReadVec4(d["sg"]["camera"]["matrix.vw"]));
   
-  std::cout << "successful loading camera" << std::endl;
+  std::cout << "[json] successful loading camera" << std::endl;
 
   // parse light
   // -- ambient
@@ -212,7 +212,7 @@ void otv::SgRapidJSON::Load(const std::string& fname)
   lightSg.Dsun = ReadVec3(d["sg"]["light"]["sun"]["dir"]);
   lightSg.Zsun = d["sg"]["light"]["sun"]["zoom"].GetFloat();	    
 
-  std::cout << "successful loading light" << std::endl;
+  std::cout << "[json] successful loading light" << std::endl;
   
   // parse mesh
   for (auto& m : d["sg"]["meshes"].GetArray()) {
@@ -223,5 +223,5 @@ void otv::SgRapidJSON::Load(const std::string& fname)
     objectsSg.back().Rv[1] = ReadVec3(m["rotate.vy"]);
     objectsSg.back().Rv[2] = ReadVec3(m["rotate.vz"]);
   }
-  std::cout << "successful loading mesh" << std::endl;
+  std::cout << "[json] successful loading mesh" << std::endl;
 }

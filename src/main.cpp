@@ -93,8 +93,7 @@ int main(int argc, const char **argv)
   
   // geometry/volume
   otv::meshes.resize(meshfiles.size());
-  for (size_t i = 0; i < meshfiles.size(); ++i)
-  {
+  for (size_t i = 0; i < meshfiles.size(); ++i) {
     otv::meshes[i] = new otv::Mesh();
     if (!otv::meshes[i]->LoadFromFileObj(meshfiles[i].c_str())) {
       otv::ErrorFatal("Fatal error, terminating the program ...");

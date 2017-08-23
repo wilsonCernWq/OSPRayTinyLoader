@@ -9,15 +9,18 @@
 # include <Magick++.h>
 #endif
 
-namespace otv {
+namespace otv
+{
   void loadimgActual
   (ImageData& image, const char* filename, const std::string path);
 };
 
 void otv::WarnAlways(std::string str)
 {
-  std::cerr << "\033[1;33m" << "[Warning] " << str << "\033[0m"
-	    << std::endl << std::endl;   
+  std::cerr << std::endl
+	    << "\033[1;33m" << "[Warning] " << str << "\033[0m"
+	    << std::endl
+	    << std::endl;   
 }
 void otv::WarnOnce(std::string str)
 {
@@ -29,8 +32,10 @@ void otv::WarnOnce(std::string str)
 }
 void otv::ErrorNoExit(std::string str)
 {
-  std::cerr << "\033[1;31m" << "[Error] " << str << "\033[0m"
-	    << std::endl << std::endl;
+  std::cerr << std::endl
+	    << "\033[1;31m" << "[Error] " << str << "\033[0m"
+	    << std::endl
+	    << std::endl;
 }
 void otv::ErrorFatal(std::string str)
 {
@@ -93,8 +98,9 @@ void otv::loadimgActual
 {
   std::string fnamestr(path + std::string(filename));
   std::size_t found = fnamestr.find_last_of('.');
-  if (found == std::string::npos) { 
-    std::cerr << "Error: unknown file format " << std::endl; return; 
+  if (found == std::string::npos) {
+    ErrorFatal("Error: unknown file format");
+    //std::cerr << "Error: unknown file format" << std::endl; return; 
   }
   // check image format
   std::string ext = fnamestr.substr(found + 1);
@@ -141,21 +147,14 @@ void otv::loadimgActual
       // convert pixels and flip image
       // OSPRay's textures have the origin at the lower left corner
       if (hdr) {
-	std::cout << "[loader] HDIR Image" << std::endl;
+	std::cout << "[loader] HDR Image" << std::endl;
       }	   
       for (size_t y = 0; y < image.height; y++) {
 	for (size_t x = 0; x < image.width; x++) {
 	  const Magick::PixelPacket &pixel = pixels[y*image.width+x];
 	  if (hdr) {
-	    // float *dst =
-	    //   &((float*)image.data.data())
-	    //   [(x+(image.height-1-y)*image.width)*image.channel];
-	    // *dst++ = pixel.red   * rcpMaxRGB;
-	    // *dst++ = pixel.green * rcpMaxRGB;
-	    // *dst++ = pixel.blue  * rcpMaxRGB;
-	    // if (image.channel == 4) {
-	    //   *dst++ = pixel.opacity * rcpMaxRGB;
-	    // }
+	    // HDR image processing
+	    HOLD;
 	  } else {
 	    unsigned char *dst =
 	      &((unsigned char*)image.data.data())
@@ -172,7 +171,8 @@ void otv::loadimgActual
     }
     std::cout << "[loader] Done ImageMagick++" << std::endl;
 #else
-    std::cerr << "Error: unknown file format " << ext << std::endl;
+    //std::cerr << "Error: unknown file format" << ext << std::endl;
+    ErrorFatal("Error: unknown file format");
 #endif
   }
 }
