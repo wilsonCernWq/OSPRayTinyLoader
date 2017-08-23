@@ -1,8 +1,14 @@
 #include "glut_binding.h"
-#include <cyGL.h>
+//#include <cyGL.h>
+
+// openGL framebuffer
+static GLint prevbufferID   = 0;
+static GLuint framebufferID = 0;
+static GLuint depthbufferID = 0;
+static GLuint colorbufferID = 0;
 
 // parameters
-static cyGLRenderBuffer2D gfb;
+//static cyGLRenderBuffer2D gfb;
 static int mousebutton = -1; // GLUT_LEFT_BUTTON GLUT_RIGHT_BUTTON GLUT_MIDDLE_BUTTON
 static int mousestate  = GLUT_UP; // GLUT_UP GLUT_DOWN
 
@@ -27,7 +33,13 @@ void KeyboardAction(int key, int x, int y)
       // but this way should work currently
       otv::NOWIN = true;
       otv::Clean();
-      gfb.Delete();
+      //gfb.Delete();
+      if (framebufferID != 0) { glDeleteFramebuffers (1,&framebufferID); }
+      framebufferID = 0; 
+      if (depthbufferID != 0) { glDeleteRenderbuffers(1,&depthbufferID); }
+      depthbufferID = 0; 
+      if (colorbufferID != 0) { glDeleteTextures(1,&colorbufferID); }
+      colorbufferID = 0;
     }
     glutLeaveMainLoop();
     break;
@@ -113,10 +125,43 @@ void OpenGLInitSystem(int argc, const char **argv)
 void OpenGLStartSystem()
 {
   if (!otv::NOWIN) {    
+    //_____________________________________________________________________
+    //
+    // OpenGL Framebuffer
     std::cout << "[openGL] Initialize openGL framebuffer" << std::endl;
-    gfb.Initialize(true, 4, otv::WINSIZE.x, otv::WINSIZE.y);
+    // color buffer
+    glGenTextures(1,&colorbufferID);
+    glBindTexture(GL_TEXTURE_2D, colorbufferID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, otv::WINSIZE.x, otv::WINSIZE.y,
+		 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    // depth buffer
+    glGenRenderbuffers(1, &depthbufferID);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthbufferID);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+			  otv::WINSIZE.x, otv::WINSIZE.y);
+    // frame buffer
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevbufferID);    
+    glGenFramebuffers(1, &framebufferID);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+			      GL_RENDERBUFFER, depthbufferID);    
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorbufferID, 0);
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };    
+    glDrawBuffers(1, DrawBuffers);
+    if (glIsFramebuffer(framebufferID) <= 0 ||
+	glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      glBindFramebuffer(GL_FRAMEBUFFER, prevbufferID);
+      otv::ErrorFatal("[OpenGL] Framebuffer cannot be initialized");
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, prevbufferID);
     std::cout << "[openGL] Done openGL framebuffer" << std::endl;
-    
+    //_____________________________________________________________________
+    //
+    // Others
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
     glDisable(GL_DEPTH_TEST);
     glutDisplayFunc(OpenGLRender);
@@ -135,11 +180,13 @@ void OpenGLRender()
     if (!otv::NOWIN) {
     otv::world.Render();
     // put framebuffer to screen
-    gfb.BindTexture();
+    //gfb.BindTexture();
+    glBindTexture(GL_TEXTURE_2D, colorbufferID);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		    GL_RGBA, GL_UNSIGNED_BYTE,
 		    otv::world.GetImageData());
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
+    //glBindFramebuffer(GL_READ_FRAMEBUFFER, gfb.GetID());
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferID);
     glBlitFramebuffer(0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		      0, 0, otv::WINSIZE.x, otv::WINSIZE.y, 
 		      GL_COLOR_BUFFER_BIT, GL_NEAREST);
