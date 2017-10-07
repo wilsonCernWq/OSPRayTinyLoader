@@ -8,8 +8,7 @@
 
 #include "common.h"
 #include "helper.h"
-#include <glm/gtx/vector_angle.hpp>
-#include <glm/gtx/transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace otv {
   //
@@ -18,7 +17,7 @@ namespace otv {
   //
   class Trackball {
   private:
-    bool  invrot = false; // inverse rotation
+    bool  invrot = true; // inverse rotation
     float radius = 1.0f;
     mat4f matrix      = mat4f(1.0f);
     mat4f matrix_prev = mat4f(1.0f);
@@ -28,7 +27,6 @@ namespace otv {
   public:
     /** constractors */
     Trackball() {}
-    Trackball(bool i) : invrot(i) {}
 
     void SetRadius(const float r) { radius = r; }
     void SetInverseMode(bool r) { invrot = r; }

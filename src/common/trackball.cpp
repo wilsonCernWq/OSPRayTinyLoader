@@ -17,14 +17,14 @@ namespace otv {
     vec3f dir = (invrot ? -1.0f : 1.0f) *
       glm::normalize(glm::cross(position_prev, position));
     // compute rotation angle
-    float angle = glm::angle(glm::normalize(position_prev),
-			     glm::normalize(position));
+    float angle = acos(glm::dot(glm::normalize(position_prev),
+				glm::normalize(position)));
     if (angle < 0.01f) {
       // to prevent position_prev == position, this will cause invalid value
       return;
     }
     else { // compute rotation
-      matrix = glm::rotate(angle, dir) * matrix_prev;
+      matrix = glm::rotate(matrix_prev, angle, dir);
     }
   }
 
