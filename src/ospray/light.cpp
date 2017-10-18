@@ -4,7 +4,7 @@ otv::Light::Light ()
 {
   Iamb = 0.50f;
   Idir = 1.50f;
-  Isun = 0.90f;
+  Isun = 2.50f;
   Camb = vec3f(174.f/255.f,218.f/255.f,255.f/255.f);
   Cdir = vec3f(127.f/255.f,178.f/255.f,255.f/255.f);
   Csun = vec3f(1.f,232.f/255.f,166.f/255.f);      
