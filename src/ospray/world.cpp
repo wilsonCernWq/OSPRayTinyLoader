@@ -1,6 +1,5 @@
 #include "world.h"
 #include <limits>
-#include <glm/gtx/norm.hpp>
  
 otv::World::World() :
   winsize (0), nowin(true),

@@ -3,7 +3,6 @@
 #include <limits>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/ext.hpp>
 
 std::string ParsePath(const std::string& str)
@@ -88,7 +87,7 @@ otv::Mesh::SetTransform()
   // matrix *= glm::rotate(glm::radians(90.f), vec3f(0.f, 0.f, 1.f));
   // matrix *= glm::translate(-center);
   //
-  otv::mat4f matrix = glm::translate(-center);
+  otv::mat4f matrix = glm::translate(glm::mat4(1.f), -center);
   transform.l = mat3f(matrix);
   transform.p = vec3f(glm::column(matrix,3));
 }

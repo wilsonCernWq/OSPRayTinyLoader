@@ -9,6 +9,8 @@
 /* choose a JSON implementation */
 #include "sg/sgRapidJSON.h"
 
+#include <functional>
+
 namespace otv 
 {
   /* global objects */
